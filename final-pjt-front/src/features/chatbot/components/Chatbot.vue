@@ -24,7 +24,7 @@
 
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
-import { useChatStore } from '@/features/chatbot/chatStore'; 
+import { useChatStore } from '@/features/chatbot/store/chatStore.js'; 
 
 const chatStore = useChatStore();
 const userInput = ref('');
@@ -32,7 +32,7 @@ const chatWindowRef = ref(null);
 
 const handleSendMessage = () => {
   if (userInput.value.trim()) {
-    chatStore.getAIResponse(userInput.value); // 수정된 함수명 사용
+    chatStore.getAIResponse(userInput.value); 
     userInput.value = ''; 
   }
 };
@@ -45,7 +45,7 @@ const scrollToBottomDOM = () => {
 };
 
 watch(
-  () => chatStore.chatMessages, // chatMessages로 변경
+  () => chatStore.chatMessages, 
   async () => {
     await nextTick(); 
     scrollToBottomDOM();
@@ -54,10 +54,6 @@ watch(
 );
 
 onMounted(() => {
-  // 초기 메시지 (만약 스토어에 없다면 여기서 추가 가능)
-  // if (chatStore.chatMessages.length === 0) { // chatMessages로 변경
-  //   chatStore.chatMessages.push({ sender: 'bot', text: '안녕하세요! 무엇을 도와드릴까요? (초기 메시지)'});
-  // }
   scrollToBottomDOM();
 });
 

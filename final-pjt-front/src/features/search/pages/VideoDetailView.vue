@@ -35,7 +35,7 @@
 <script setup>
 import { onMounted } from 'vue'; 
 import { useRoute } from 'vue-router';
-import { useVideoStore } from '@/features/search/videoStore';
+import { useVideoStore } from '@/features/search/store/videoStore.js';
 import { storeToRefs } from 'pinia';
 import LoadingIcon from "@/features/shared/components/LoadingIcon.vue"; 
 

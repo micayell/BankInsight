@@ -5,7 +5,7 @@ from rest_framework import status, generics
 from .models import ProductPrice, SilverPrice
 from .services import fetch_gold_data, fetch_silver_data
 from .serializers import (
-    GoldPriceSerializer, SilverPriceSerializer, 
+    SilverPriceSerializer, 
     GoldPriceHistorySerializer, SilverPriceHistorySerializer
 )
 from datetime import date, timedelta

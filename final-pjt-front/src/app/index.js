@@ -8,8 +8,8 @@ import RegistrationView from "@/features/accounts/pages/RegistrationView.vue";
 import MapView from "@/features/map/pages/MapView.vue";
 import ArticleListView from "@/features/articles/pages/ArticleListView.vue";
 import ArticleCreateView from "@/features/articles/pages/ArticleCreateView.vue";
-import SearchView from "@/features/search/SearchView.vue";
-import SpotView from "@/features/products/pages/SpotView.vue";
+import SearchView from "@/features/search/pages/SearchView.vue";
+import SpotView from "@/features/spot/pages/SpotView.vue";
 import FinancialProductsView from "@/features/products/pages/FinancialProductsView.vue";
 import DepositDetailView from "@/features/products/pages/DepositDetailView.vue";
 import SavingDetailView from "@/features/products/pages/SavingDetailView.vue";
@@ -17,7 +17,7 @@ import ProfileView from "@/features/accounts/pages/ProfileView.vue";
 import ArticleDetailView from "@/features/articles/pages/ArticleDetailView.vue";
 import ArticleUpdateView from "@/features/articles/pages/ArticleUpdateView.vue";
 import ProfileUpdateView from "@/features/accounts/pages/ProfileUpdateView.vue";
-import VideoDetailView from "@/features/search/VideoDetailView.vue";
+import VideoDetailView from "@/features/search/pages/VideoDetailView.vue";
 
 const routes = [
   { path: "/", name: "home", component: IndexView },

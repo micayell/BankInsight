@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
@@ -6,7 +5,7 @@ from rest_framework.response import Response
 from openai import OpenAI, APIError, APITimeoutError, RateLimitError, AuthenticationError, BadRequestError
 import json
 import logging
-from financial_products.models import DepositProduct, DepositOption, SavingProduct, SavingOption
+from financial_products.models import DepositProduct, SavingProduct
 
 logger = logging.getLogger(__name__) 
 
@@ -47,6 +46,7 @@ def chatbot_response(request):
             
             for product in deposits:
                 options_info = []
+                # noinspection PyUnresolvedReferences
                 for opt in product.options.all().order_by('-intr_rate2', '-intr_rate')[:2]: 
                     options_info.append(
                         f"- {opt.save_trm}개월 ({opt.intr_rate_type_nm}): 기본 {opt.intr_rate}%, 우대 적용시 {opt.intr_rate2}%"
@@ -79,6 +79,7 @@ def chatbot_response(request):
             
             for product in savings:
                 options_info = []
+                # noinspection PyUnresolvedReferences
                 for opt in product.options.all().order_by('-intr_rate2', '-intr_rate')[:2]:
                     options_info.append(
                         f"- {opt.save_trm}개월 ({opt.rsrv_type_nm}, {opt.intr_rate_type_nm}): 기본 {opt.intr_rate}%, 우대 적용시 {opt.intr_rate2}%"
@@ -175,17 +176,17 @@ def chatbot_response(request):
         return Response({"response": chat_response_content})
 
     except RateLimitError as e:
-        logger.error(f"OpenAI RateLimitError (할당량 초과 가능성): {str(e)} | HTTP Status: {e.status_code} | Error Code: {e.code}", exc_info=True)
+        logger.error(f"OpenAI RateLimitError (할당량 초과 가능성): {str(e)} | HTTP Status: {e.status_code if hasattr(e, 'status_code') else 'N/A'} | Error Code: {e.code if hasattr(e, 'code') else 'N/A'}", exc_info=True)
         return Response({"error": "API 사용량 제한에 도달했습니다. 관리자에게 문의하거나 요금제를 확인해주세요. (ERR_RATE_LIMIT)", "details": str(e)}, status=429)
     except AuthenticationError as e:
-        logger.error(f"OpenAI AuthenticationError (API 키 인증 실패): {str(e)} | HTTP Status: {e.status_code} | Error Code: {e.code}", exc_info=True)
+        logger.error(f"OpenAI AuthenticationError (API 키 인증 실패): {str(e)} | HTTP Status: {e.status_code if hasattr(e, 'status_code') else 'N/A'} | Error Code: {e.code if hasattr(e, 'code') else 'N/A'}", exc_info=True)
         return Response({"error": "OpenAI API 키 인증에 실패했습니다. 서버 설정을 확인해주세요. (ERR_AUTH)", "details": str(e)}, status=401)
     except APITimeoutError as e:
         logger.error(f"OpenAI APITimeoutError (요청 시간 초과): {str(e)}", exc_info=True)
         return Response({"error": "OpenAI API 요청 처리 시간이 초과되었습니다. (ERR_TIMEOUT)", "details": str(e)}, status=504)
     except APIError as e: 
-        logger.error(f"OpenAI APIError (일반 API 오류): {str(e)} | HTTP Status: {e.status_code} | Error Code: {e.code}", exc_info=True)
-        return Response({"error": f"OpenAI API 통신 중 오류가 발생했습니다. (ERR_API_GENERAL - CODE: {e.code or 'N/A'})", "details": str(e)}, status=e.status_code or 500)
+        logger.error(f"OpenAI APIError (일반 API 오류): {str(e)} | HTTP Status: {e.status_code if hasattr(e, 'status_code') else 'N/A'} | Error Code: {e.code if hasattr(e, 'code') else 'N/A'}", exc_info=True)
+        return Response({"error": f"OpenAI API 통신 중 오류가 발생했습니다. (ERR_API_GENERAL - CODE: {e.code if hasattr(e, 'code') else 'N/A'})", "details": str(e)}, status=e.status_code if hasattr(e, 'status_code') and e.status_code else 500)
     except BadRequestError as e: 
         logger.error(f"OpenAI BadRequestError (잘못된 요청): {str(e)} | Param: {e.param if hasattr(e, 'param') else 'N/A'}", exc_info=True)
         return Response({"error": f"OpenAI API에 잘못된 요청을 보냈습니다. (ERR_BAD_REQUEST - PARAM: {e.param if hasattr(e, 'param') else 'N/A'})", "details": str(e)}, status=400)

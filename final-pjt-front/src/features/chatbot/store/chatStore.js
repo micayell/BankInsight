@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/features/shared/api/api.js'
-import { useUserStore } from '../accounts/store/userStore.js'
+import { useUserStore } from '../../accounts/store/userStore.js'
 
 export const useChatStore = defineStore('chat', () => {
   const chatMessages = ref([]) 

@@ -27,7 +27,7 @@
 
 <script setup>
 const heroSectionBackgroundUrl = '/background.png';
-import ExchangeRate from '@/features/spot/pages/ExchangeRate.vue'; 
+import ExchangeRate from '@/features/spot/components/ExchangeRate.vue'; 
 </script>
 
 <style scoped>

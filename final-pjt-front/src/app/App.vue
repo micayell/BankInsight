@@ -110,7 +110,7 @@
 import { ref } from "vue";
 import { RouterView, RouterLink, useRouter } from "vue-router";
 import { useUserStore } from "@/features/accounts/store/userStore.js";
-import ChatbotComponent from "@/features/chatbot/Chatbot.vue";
+import ChatbotComponent from "@/features/chatbot/components/Chatbot.vue";
 import swal from "sweetalert";
 
 const appLogo = "/logo.png";

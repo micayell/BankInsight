@@ -21,7 +21,7 @@
 
 <script setup>
 import { computed } from "vue";
-import { useVideoStore } from "@/features/search/videoStore.js";
+import { useVideoStore } from "@/features/search/store/videoStore.js";
 import EachVideo from "@/features/shared/components/EachVideo.vue";
 
 const store = useVideoStore();

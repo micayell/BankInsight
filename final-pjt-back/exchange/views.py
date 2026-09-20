@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.conf import settings
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny
@@ -16,7 +15,8 @@ def _fetch_exchange_data_with_fallback(base_date):
     EXCHANGE_API_KEY = settings.EXCHANGE_API_KEY
     for i in range(7):
         search_date = base_date - timedelta(days=i)
-        url = f'https://www.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey={EXCHANGE_API_KEY}&searchdate={search_date.strftime("%Y%m%d")}&data=AP01'
+        # 공지사항에 따라 기존 www.koreaexim.go.kr 도메인이 종료되고 oapi.koreaexim.go.kr 로 변경됨
+        url = f'https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey={EXCHANGE_API_KEY}&searchdate={search_date.strftime("%Y%m%d")}&data=AP01'
         
         try:
             response = requests.get(url, timeout=10)
@@ -88,4 +88,3 @@ def exchangeyesterday(request):
         return Response({'error': '외부 환율 API 호출 중 오류가 발생했습니다.', 'details': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     except Exception as e:
         return Response({'error': '서버 내부 오류가 발생했습니다.', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
