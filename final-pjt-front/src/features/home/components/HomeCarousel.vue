@@ -3,14 +3,14 @@
     <div id="homeMainCarousel" class="carousel slide toss-carousel" data-bs-ride="carousel">
       
       <div class="carousel-indicators toss-indicators">
-        <button type="button" data-bs-target="#homeMainCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
-        <button type="button" data-bs-target="#homeMainCarousel" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#homeMainCarousel" data-bs-slide-to="2"></button>
+        <button type="button" data-bs-target="#homeMainCarousel" data-bs-slide-to="0" :class="{ active: activeSlideIndex === 0 }" aria-current="true"></button>
+        <button type="button" data-bs-target="#homeMainCarousel" data-bs-slide-to="1" :class="{ active: activeSlideIndex === 1 }"></button>
+        <button type="button" data-bs-target="#homeMainCarousel" data-bs-slide-to="2" :class="{ active: activeSlideIndex === 2 }"></button>
       </div>
       
       <div class="carousel-inner h-100">
         <!-- 1번 슬라이드: 맞춤 금융상품 -->
-        <div class="carousel-item active slide-item" data-bs-interval="5000">
+        <div class="carousel-item slide-item" :class="{ active: activeSlideIndex === 0 }" data-bs-interval="5000">
           <div class="container d-flex flex-column justify-content-center align-items-center h-100 text-center px-4">
             <h2 class="fw-bold text-dark mb-3 slide-title">나에게 딱 맞는<br/>금융상품 찾기</h2>
             <p class="text-muted fs-5 mb-5 slide-desc">복잡한 예적금, 대출 비교는 더 이상 그만!<br>BankInsight에서 한눈에 비교하고 자산을 키워보세요.</p>
@@ -21,7 +21,7 @@
         </div>
 
         <!-- 2번 슬라이드: 환율 정보 -->
-        <div class="carousel-item slide-item" data-bs-interval="4000">
+        <div class="carousel-item slide-item" :class="{ active: activeSlideIndex === 1 }" data-bs-interval="4000">
           <div class="container d-flex flex-column justify-content-center align-items-center h-100 text-center px-4">
             <h2 class="fw-bold text-dark mb-3 slide-title">오늘의 환율은?</h2>
             <p class="text-muted fs-5 mb-5 slide-desc">주요 국가의 실시간 환율을 빠르게 확인하세요.</p>
@@ -48,7 +48,7 @@
         </div>
 
         <!-- 3번 슬라이드: 금 시세 -->
-        <div class="carousel-item slide-item" data-bs-interval="4000">
+        <div class="carousel-item slide-item" :class="{ active: activeSlideIndex === 2 }" data-bs-interval="4000">
           <div class="container d-flex flex-column justify-content-center align-items-center h-100 text-center px-4">
             <h2 class="fw-bold text-dark mb-3 slide-title">반짝이는 금 시세</h2>
             <p class="text-muted fs-5 mb-5 slide-desc">안전 자산의 대명사, 오늘의 금 1g 가격을 확인해보세요.</p>
@@ -89,12 +89,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useExchangeStore } from '@/features/spot/store/exchangeStore';
 import { useSpotStore } from '@/features/spot/store/spotStore';
 
 const exchangeStore = useExchangeStore();
 const spotStore = useSpotStore();
+
+const activeSlideIndex = ref(Number(sessionStorage.getItem('homeMainSlide')) || 0);
 
 onMounted(() => {
   if (exchangeStore.todayRates.length === 0 && !exchangeStore.isLoading) {
@@ -103,6 +105,16 @@ onMounted(() => {
   if (spotStore.rawData.length === 0 && !spotStore.loading) {
     spotStore.setPeriod('1m'); 
   }
+
+  // Carousel 이벤트 리스너 등록 후 상태 저장
+  setTimeout(() => {
+    const carouselEl = document.getElementById('homeMainCarousel');
+    if (carouselEl) {
+      carouselEl.addEventListener('slid.bs.carousel', (event) => {
+        sessionStorage.setItem('homeMainSlide', event.to);
+      });
+    }
+  }, 500);
 });
 
 const majorRates = computed(() => {

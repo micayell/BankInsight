@@ -93,7 +93,9 @@ const mortgageStore = useMortgageStore();
 const jeonseStore = useJeonseStore();
 const router = useRouter();
 
-const activeProductType = ref('deposits');
+import { useRoute } from 'vue-router';
+const route = useRoute();
+const activeProductType = ref(route.query.tab || 'deposits');
 const isLoading = ref(true);
 const hasError = ref(false);
 
@@ -174,6 +176,7 @@ const applyActiveFilters = () => {
 
 const selectProductType = (type) => {
   activeProductType.value = type;
+  router.replace({ query: { ...route.query, tab: type } }).catch(()=>{});
   selectedBank.value = '';
   selectedTerm.value = '';
   applyActiveFilters();

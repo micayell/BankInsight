@@ -15,7 +15,7 @@
           <button v-for="(p, i) in allRecommended" :key="'ind-'+i" type="button" 
                   data-bs-target="#recommendCarousel" 
                   :data-bs-slide-to="i" 
-                  :class="{ active: i === 0 }" 
+                  :class="{ active: i === activeSlideIndex }" 
                   aria-label="Slide"></button>
         </div>
 
@@ -25,7 +25,7 @@
             class="carousel-item" 
             v-for="(product, index) in allRecommended" 
             :key="product.fin_prdt_cd"
-            :class="{ active: index === 0 }"
+            :class="{ active: index === activeSlideIndex }"
           >
             <div class="toss-product-card shadow-sm d-flex justify-content-between align-items-center p-4 mx-3 cursor-pointer hover-grow" @click="goToDetail(product)">
               <div>
@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/features/accounts/store/userStore';
 import { useDepositStore } from '@/features/products/store/depositStore';
@@ -78,6 +78,8 @@ const savingStore = useSavingStore();
 const mortgageStore = useMortgageStore();
 const jeonseStore = useJeonseStore();
 
+const activeSlideIndex = ref(Number(sessionStorage.getItem('basicRecommendSlide')) || 0);
+
 onMounted(async () => {
   if (userStore.isLogin) {
     if (depositStore.deposits.length === 0) depositStore.fetchDeposits();
@@ -85,53 +87,131 @@ onMounted(async () => {
     if (mortgageStore.mortgages.length === 0) mortgageStore.fetchMortgages();
     if (jeonseStore.jeonses.length === 0) jeonseStore.fetchJeonses();
   }
+  
+  // Carousel 이벤트 리스너 등록 후 상태 저장
+  setTimeout(() => {
+    const carouselEl = document.getElementById('recommendCarousel');
+    if (carouselEl) {
+      carouselEl.addEventListener('slid.bs.carousel', (event) => {
+        sessionStorage.setItem('basicRecommendSlide', event.to);
+      });
+    }
+  }, 500);
 });
 
 const allRecommended = computed(() => {
   if (!userStore.isLogin) return [];
   
   const recommended = [];
+  const userInfo = userStore.userInfo;
+  const userPeriod = userInfo.desirePeriod || 12; // 목표 투자 기간 (개월)
+  const userTendency = userInfo.tendency || 5;    // 투자 성향 (1~10)
   
-  // 1. 예금(Deposit) - 금리가 높은 순 (내림차순)
+  // 자산(wealth)과 연봉(salary)을 기반으로 자금 여력 계산 (단위: 만원)
+  const totalPower = (userInfo.wealth || 0) + (userInfo.salary || 0); 
+  // 기준치(예: 5000만원) 대비 여력 비율 (너무 극단적인 값을 막기 위해 0.5 ~ 2 사이로 제한)
+  const powerRatio = Math.min(2, Math.max(0.5, totalPower / 5000));
+  
+  // 성향(tendency)과 자금 여력(powerRatio)을 융합하여 '변동금리 위험 페널티 가중치' 결정
+  // 성향이 낮을수록(안정형), 여력이 적을수록 가중치(위험 민감도)가 커짐
+  const riskPenaltyWeight = Math.max(0, (11 - userTendency) * 0.1) / powerRatio;
+  
+  // 1. 예금(Deposit) - 사용자의 목표 기간(desirePeriod)과 일치할수록 높은 점수
   if (depositStore.deposits.length > 0) {
     let mapped = depositStore.deposits.map(p => {
-      const rates = p.options.map(o => Number(o.intr_rate2 || o.intr_rate)).filter(r => !isNaN(r));
-      return { ...p, displayRate: rates.length ? Math.max(...rates) : 0, isLoan: false, categoryName: '정기예금', detailRoute: 'deposit-detail' };
+      let bestScore = -999;
+      let bestRate = 0;
+      p.options.forEach(o => {
+        const rate = Number(o.intr_rate2 || o.intr_rate);
+        if (!isNaN(rate) && rate > 0) {
+          // 목표 기간과의 차이 1개월당 0.15%p 감점 적용
+          const periodDiff = Math.abs((o.save_trm || 12) - userPeriod);
+          const score = rate - (periodDiff * 0.15);
+          if (score > bestScore) {
+            bestScore = score;
+            bestRate = rate;
+          }
+        }
+      });
+      return { ...p, score: bestScore, displayRate: bestRate, isLoan: false, categoryName: '정기예금', detailRoute: 'deposit-detail' };
     });
-    // 유효한 금리가 있는 것만 남김
-    mapped = mapped.filter(p => p.displayRate > 0).sort((a, b) => b.displayRate - a.displayRate);
-    if(mapped[0]) recommended.push(mapped[0]);
+    // 유효한 점수를 기준으로 내림차순 정렬
+    mapped = mapped.filter(p => p.displayRate > 0).sort((a, b) => b.score - a.score);
+    if (mapped[0]) recommended.push(mapped[0]);
   }
   
-  // 2. 적금(Saving) - 금리가 높은 순 (내림차순)
+  // 2. 적금(Saving) - 사용자의 목표 기간(desirePeriod) 페널티 동일 적용
   if (savingStore.savings.length > 0) {
     let mapped = savingStore.savings.map(p => {
-      const rates = p.options.map(o => Number(o.intr_rate2 || o.intr_rate)).filter(r => !isNaN(r));
-      return { ...p, displayRate: rates.length ? Math.max(...rates) : 0, isLoan: false, categoryName: '정기적금', detailRoute: 'saving-detail' };
+      let bestScore = -999;
+      let bestRate = 0;
+      p.options.forEach(o => {
+        const rate = Number(o.intr_rate2 || o.intr_rate);
+        if (!isNaN(rate) && rate > 0) {
+          const periodDiff = Math.abs((o.save_trm || 12) - userPeriod);
+          const score = rate - (periodDiff * 0.15);
+          if (score > bestScore) {
+            bestScore = score;
+            bestRate = rate;
+          }
+        }
+      });
+      return { ...p, score: bestScore, displayRate: bestRate, isLoan: false, categoryName: '정기적금', detailRoute: 'saving-detail' };
     });
-    mapped = mapped.filter(p => p.displayRate > 0).sort((a, b) => b.displayRate - a.displayRate);
-    if(mapped[0]) recommended.push(mapped[0]);
+    mapped = mapped.filter(p => p.displayRate > 0).sort((a, b) => b.score - a.score);
+    if (mapped[0]) recommended.push(mapped[0]);
   }
   
-  // 3. 전세자금대출(Jeonse) - 최저금리가 낮은 순 (오름차순)
+  // 3. 전세자금대출(Jeonse) - 자금 여력과 투자 성향을 고려하여 최저금리와 금리변동폭(Spread) 종합 점수 계산
   if (jeonseStore.jeonses.length > 0) {
     let mapped = jeonseStore.jeonses.map(p => {
-      const rates = p.options.map(o => Number(o.lend_rate_min)).filter(r => !isNaN(r) && r > 0);
-      return { ...p, displayRate: rates.length ? Math.min(...rates) : 0, isLoan: true, categoryName: '전세자금대출', detailRoute: 'jeonse-detail' };
+      let bestScore = -999; // 대출은 음수로 점수를 매겨 가장 높은 값(0에 가까운 값)이 1위
+      let bestRate = 0;
+      p.options.forEach(o => {
+        const minRate = Number(o.lend_rate_min);
+        const maxRate = Number(o.lend_rate_max) || minRate;
+        if (!isNaN(minRate) && minRate > 0) {
+          const spreadRisk = Math.max(0, maxRate - minRate);
+          // 기본 금리 부담(-minRate)에 최고-최저 금리차(spread)에 따른 리스크 페널티 차감
+          const score = -minRate - (spreadRisk * riskPenaltyWeight);
+          if (score > bestScore) {
+            bestScore = score;
+            bestRate = minRate;
+          }
+        }
+      });
+      return { ...p, score: bestScore, displayRate: bestRate, isLoan: true, categoryName: '전세자금대출', detailRoute: 'jeonse-detail' };
     });
-    // 금리가 0인 항목 제외하고 오름차순 정렬
-    mapped = mapped.filter(p => p.displayRate > 0).sort((a, b) => a.displayRate - b.displayRate);
-    if(mapped[0]) recommended.push(mapped[0]);
+    mapped = mapped.filter(p => p.displayRate > 0).sort((a, b) => b.score - a.score); 
+    if (mapped[0]) recommended.push(mapped[0]);
   }
   
-  // 4. 주택담보대출(Mortgage) - 최저금리가 낮은 순 (오름차순)
+  // 4. 주택담보대출(Mortgage) - 자금 여력과 투자 성향 고려 모델 반영
   if (mortgageStore.mortgages.length > 0) {
     let mapped = mortgageStore.mortgages.map(p => {
-      const rates = p.options.map(o => Number(o.lend_rate_min)).filter(r => !isNaN(r) && r > 0);
-      return { ...p, displayRate: rates.length ? Math.min(...rates) : 0, isLoan: true, categoryName: '주택담보대출', detailRoute: 'mortgage-detail' };
+      let bestScore = -999;
+      let bestRate = 0;
+      p.options.forEach(o => {
+        const minRate = Number(o.lend_rate_min);
+        const maxRate = Number(o.lend_rate_max) || minRate;
+        if (!isNaN(minRate) && minRate > 0) {
+          const spreadRisk = Math.max(0, maxRate - minRate);
+          const score = -minRate - (spreadRisk * riskPenaltyWeight);
+          if (score > bestScore) {
+            bestScore = score;
+            bestRate = minRate;
+          }
+        }
+      });
+      return { ...p, score: bestScore, displayRate: bestRate, isLoan: true, categoryName: '주택담보대출', detailRoute: 'mortgage-detail' };
     });
-    mapped = mapped.filter(p => p.displayRate > 0).sort((a, b) => a.displayRate - b.displayRate);
-    if(mapped[0]) recommended.push(mapped[0]);
+    mapped = mapped.filter(p => p.displayRate > 0).sort((a, b) => b.score - a.score);
+    if (mapped[0]) recommended.push(mapped[0]);
+  }
+  
+  // 만약 저장된 슬라이드 인덱스가 결과 배열 크기를 초과하면 초기화
+  if (activeSlideIndex.value >= recommended.length) {
+    activeSlideIndex.value = 0;
   }
   
   return recommended;
