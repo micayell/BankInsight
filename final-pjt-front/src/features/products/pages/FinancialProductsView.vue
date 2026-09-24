@@ -1,29 +1,21 @@
 <template>
-  <div class="page-wrapper">
-    <div class="content-container financial-products-view">
+  <div class="py-5">
+    <div class="container-fluid max-w-1140 mx-auto px-lg-0 px-3 financial-products-view">
       <header class="page-section-header pb-3 mb-4 border-bottom">
         <div>
           <h1 class="h4 mb-0">금융 상품</h1>
-          <p class="text-muted mb-0 mt-1 subtitle-text">나에게 맞는 최적의 예금 및 적금 상품을 찾아보세요.</p>
+          <p class="text-muted mb-0 mt-1 subtitle-text">나에게 맞는 최적의 예·적금 및 대출 상품을 찾아보세요.</p>
         </div>
       </header>
 
       <div class="product-type-selector-bar mb-4">
-        <button
-          @click="selectProductType('deposits')"
-          class="btn btn-custom me-2"
-          :class="{ 'btn-custom-primary': activeProductType === 'deposits', 'btn-custom-outline-theme': activeProductType !== 'deposits' }">
-          <i class="bi bi-wallet2 me-2"></i>정기예금
-        </button>
-        <button
-          @click="selectProductType('savings')"
-          class="btn btn-custom"
-          :class="{ 'btn-custom-primary': activeProductType === 'savings', 'btn-custom-outline-theme': activeProductType !== 'savings' }">
-          <i class="bi bi-piggy-bank me-2"></i>정기적금
-        </button>
+        <button @click="selectProductType('deposits')" class="btn btn me-2" :class="{ 'btn-primary text-white': activeProductType === 'deposits', 'btn-light text-muted border-0 bg-white shadow-sm': activeProductType !== 'deposits' }"><i class="bi bi-wallet2 me-2"></i>정기예금</button>
+        <button @click="selectProductType('savings')" class="btn btn me-2" :class="{ 'btn-primary text-white': activeProductType === 'savings', 'btn-light text-muted border-0 bg-white shadow-sm': activeProductType !== 'savings' }"><i class="bi bi-piggy-bank me-2"></i>정기적금</button>
+        <button @click="selectProductType('mortgages')" class="btn btn me-2" :class="{ 'btn-primary text-white': activeProductType === 'mortgages', 'btn-light text-muted border-0 bg-white shadow-sm': activeProductType !== 'mortgages' }"><i class="bi bi-house-door me-2"></i>주택담보대출</button>
+        <button @click="selectProductType('jeonses')" class="btn btn-custom" :class="{ 'btn-primary text-white': activeProductType === 'jeonses', 'btn-light text-muted border-0 bg-white shadow-sm': activeProductType !== 'jeonses' }"><i class="bi bi-key me-2"></i>전세자금대출</button>
       </div>
 
-      <div class="filter-bar card-kia p-3 mb-4">
+      <div class="filter-bar bg-white shadow-sm rounded-4 border-0 p-3 mb-4">
         <div class="row g-3 align-items-end">
           <div class="col-md-4">
             <label for="bankFilter" class="form-label filter-label-custom">은행 선택</label>
@@ -40,10 +32,10 @@
             </select>
           </div>
           <div class="col-md-2 d-grid">
-            <button class="btn btn-custom btn-custom-primary" @click="applyActiveFilters">조회</button>
+            <button class="btn btn btn-primary text-white" @click="applyActiveFilters">조회</button>
           </div>
           <div class="col-md-2 d-grid">
-            <button class="btn btn-custom btn-custom-outline-theme" @click="resetAndSearchFilters">초기화</button>
+            <button class="btn btn btn-light text-muted border-0 bg-white shadow-sm" @click="resetAndSearchFilters">초기화</button>
           </div>
         </div>
       </div>
@@ -65,7 +57,7 @@
 
       <div v-else class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 product-grid">
         <div v-for="product in filteredProducts" :key="product.fin_prdt_cd" class="col">
-          <div class="card product-card-custom h-100" @click="goToDetail(product)">
+          <div class="card card toss-product-card h-100 border-0 shadow-sm hover-grow h-100" @click="goToDetail(product)">
             <div class="card-header product-card-header d-flex align-items-center">
               <img v-if="product.logoUrl" :src="product.logoUrl" :alt="`${product.kor_co_nm} 로고`" class="bank-logo-financial me-2">
               <h5 class="product-title-custom mb-0">{{ product.fin_prdt_nm }}</h5>
@@ -74,7 +66,7 @@
               <p class="product-bank-custom mb-3">{{ product.kor_co_nm }}</p>
               <div class="rate-info-custom mt-auto text-end">
                 <small class="text-muted">최고 연 (세전)</small>
-                <div class="product-max-rate-custom">{{ getMaxRate(product.options) }}%</div>
+                <div class="text-primary fw-bold fs-2">{{ getMaxRate(product.options) }}%</div>
               </div>
             </div>
             <div class="card-footer product-footer-custom">
@@ -91,10 +83,14 @@
 import { ref, onMounted, computed } from 'vue';
 import { useDepositStore } from '@/features/products/store/depositStore';
 import { useSavingStore } from '@/features/products/store/savingStore';
+import { useMortgageStore } from '@/features/products/store/mortgageStore';
+import { useJeonseStore } from '@/features/products/store/jeonseStore';
 import { useRouter } from 'vue-router';
 
 const depositStore = useDepositStore();
 const savingStore = useSavingStore();
+const mortgageStore = useMortgageStore();
+const jeonseStore = useJeonseStore();
 const router = useRouter();
 
 const activeProductType = ref('deposits');
@@ -104,27 +100,30 @@ const hasError = ref(false);
 const selectedBank = ref('');
 const selectedTerm = ref('');
 
-const activeFilters = ref({
-  bank: '',
-  term: ''
-});
+const activeFilters = ref({ bank: '', term: '' });
 
 const currentStore = computed(() => {
-  return activeProductType.value === 'deposits' ? depositStore : savingStore;
+  if (activeProductType.value === 'deposits') return depositStore;
+  if (activeProductType.value === 'savings') return savingStore;
+  if (activeProductType.value === 'mortgages') return mortgageStore;
+  return jeonseStore;
 });
 
 const currentProducts = computed(() => {
-  const store = currentStore.value;
-  return activeProductType.value === 'deposits' ? store.deposits : store.savings;
+  if (activeProductType.value === 'deposits') return depositStore.deposits;
+  if (activeProductType.value === 'savings') return savingStore.savings;
+  if (activeProductType.value === 'mortgages') return mortgageStore.mortgages;
+  return jeonseStore.jeonses;
 });
 
 const filteredProducts = computed(() => {
   if (!currentProducts.value || currentProducts.value.length === 0) return [];
   return currentProducts.value.filter(product => {
     const bankMatch = activeFilters.value.bank ? product.kor_co_nm === activeFilters.value.bank : true;
-    const termMatch = activeFilters.value.term
-      ? product.options.some(opt => String(opt.save_trm) === activeFilters.value.term)
-      : true;
+    let termMatch = true;
+    if (activeFilters.value.term && (activeProductType.value === 'deposits' || activeProductType.value === 'savings')) {
+      termMatch = product.options.some(opt => String(opt.save_trm) === activeFilters.value.term);
+    }
     return bankMatch && termMatch;
   });
 });
@@ -137,6 +136,7 @@ const availableBanks = computed(() => {
 
 const availableTerms = computed(() => {
   if (!currentProducts.value || currentProducts.value.length === 0) return [];
+  if (activeProductType.value === 'mortgages' || activeProductType.value === 'jeonses') return [];
   const terms = new Set();
   currentProducts.value.forEach(product => {
     if (product.options && Array.isArray(product.options)) {
@@ -152,11 +152,13 @@ const loadData = async () => {
   try {
     await Promise.all([
       depositStore.fetchDeposits(),
-      savingStore.fetchSavings()
+      savingStore.fetchSavings(),
+      mortgageStore.fetchMortgages(),
+      jeonseStore.fetchJeonses()
     ]);
     applyActiveFilters();
   } catch (error) {
-    console.error("FinancialProductsView: 상품 정보 로드 실패:", error);
+    console.error('상품 정보 로드 실패:', error);
     hasError.value = true;
   } finally {
     isLoading.value = false;
@@ -185,7 +187,12 @@ const resetAndSearchFilters = () => {
 
 const goToDetail = (product) => {
   const code = product.fin_prdt_cd;
-  const routeName = activeProductType.value === 'deposits' ? 'deposit-detail' : 'saving-detail';
+  let routeName = 'deposit-detail';
+  if (activeProductType.value === 'savings') routeName = 'saving-detail';
+  else if (activeProductType.value === 'mortgages') routeName = 'mortgage-detail';
+  else if (activeProductType.value === 'jeonses') routeName = 'jeonse-detail';
+  
+
   router.push({ name: routeName, params: { code } });
 };
 
@@ -193,165 +200,55 @@ const getMaxRate = (options) => {
   if (!options || options.length === 0) return 'N/A';
   let maxRate = 0;
   options.forEach(opt => {
-    const rate = parseFloat(opt.intr_rate2 || opt.intr_rate || 0);
-    if (rate > maxRate) {
+    const rate = parseFloat(opt.intr_rate2 || opt.intr_rate || opt.lend_rate_min || 0);
+    if (rate && rate > maxRate) {
       maxRate = rate;
     }
   });
-  return maxRate.toFixed(2);
+  return maxRate > 0 ? maxRate.toFixed(2) : 'N/A';
 };
 </script>
 
 <style scoped>
-.financial-products-view {
-  background-color: var(--app-background-secondary, #f8f9fa);
-  padding: 1.5rem;
-  min-height: calc(100vh - 56px - 70px);
-  border-radius: var(--app-border-radius);
+.toss-product-card {
+  border-radius: 16px !important;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
 }
-
-.page-section-header .subtitle-text {
-  font-size: 0.9rem;
+.hover-grow:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important;
 }
-
-.financial-products-view .product-type-selector-bar {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
+.max-w-1140 {
+  max-width: 1140px;
 }
-.financial-products-view .product-type-selector-bar .btn-custom {
-  padding: 0.65rem 1.3rem;
-  font-size: 0.95rem;
+.btn-light.bg-white {
+  background-color: #ffffff !important;
 }
-
-.financial-products-view .btn-custom-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-  color: #ffffff !important;
+.btn {
+  border-radius: 12px !important;
+  padding: 0.75rem 1.25rem;
   font-weight: 600;
 }
-.financial-products-view .btn-custom-primary:hover {
-  background-color: #0056b3;
-  border-color: #0050a0;
-}
-
-.financial-products-view .btn-custom-outline-theme {
-  border: 1px solid #6c757d;
-  color: #495057;
-  background-color: transparent;
-}
-.financial-products-view .btn-custom-outline-theme:hover {
-  background-color: #e9ecef;
-  color: #495057;
-  border-color: #6c757d;
-}
-
-.financial-products-view .filter-bar {
-  background-color: var(--app-background-primary, #ffffff);
-  padding: 1.25rem;
-  border-radius: var(--app-border-radius);
-  margin-bottom: 2rem;
-  border: 1px solid var(--app-border-color, #dee2e6);
-}
-.financial-products-view .filter-bar .row {
-  align-items: flex-end;
-}
-.financial-products-view .filter-label-custom {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--app-text-medium, #6c757d);
-  margin-bottom: 0.5rem;
-}
-.financial-products-view .form-select-custom {
-  border-radius: var(--app-border-radius);
-  border: 1px solid #ced4da;
-  background-color: var(--app-background-primary, #ffffff);
-  color: var(--app-text-dark, #343a40);
-  font-size: 0.9rem;
-  padding: 0.5rem 0.75rem;
-}
-.financial-products-view .form-select-custom:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.financial-products-view .filter-bar .btn-custom {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  width: 100%;
-}
-
-
-.product-card-custom {
-  background-color: var(--app-background-primary, #ffffff);
-  border: 1px solid var(--app-border-color, #dee2e6);
-  border-radius: var(--app-border-radius);
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  display: flex;
-  flex-direction: column;
-}
-.product-card-custom:hover {
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  border-color: #007bff;
-}
-.product-card-header {
-  background-color: #f9f9f9;
-  border-bottom: 1px solid var(--app-border-color, #dee2e6);
+.form-select {
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
   padding: 0.75rem 1rem;
 }
+
 .bank-logo-financial {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
-  border-radius: 4px;
-  background-color: #fff;
-  border: 1px solid #eee;
+  border-radius: 50%;
+  border: 1px solid #f2f4f6;
+  background-color: #ffffff;
+  padding: 4px;
 }
-.product-card-custom .card-body {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-.product-title-custom {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--app-text-dark, #343a40);
-  margin-bottom: 0;
-  line-height: 1.3;
-}
-.product-bank-custom {
-  font-size: 0.85rem;
-  color: var(--app-text-medium, #6c757d);
-  margin-bottom: 1rem;
-}
-.rate-info-custom {
-  margin-top: auto;
-}
-.rate-info-custom small {
-  font-size: 0.8rem;
-  color: var(--app-text-light, #adb5bd);
-}
-.product-max-rate-custom {
-  font-size: 1.6rem;
+.page-section-header h1 {
+
   font-weight: 700;
-  color: #007bff; 
-  line-height: 1;
-}
-.product-footer-custom {
-  background-color: transparent;
-  border-top: 1px solid var(--app-border-color, #dee2e6);
-  padding: 0.75rem 1.25rem;
-  font-size: 0.8rem;
-  color: var(--app-text-medium, #6c757d);
-}
-
-.product-grid {
-  padding-bottom: 2rem;
-}
-
-.alert .bi {
-  font-size: 2.5rem !important;
+  font-size: 2rem;
+  color: #191f28;
 }
 </style>

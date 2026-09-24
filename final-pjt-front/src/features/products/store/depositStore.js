@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia';
-import api from '@/features/shared/api/api.js';
+import { productApi } from '@/features/products/api/productApi.js';
 import swal from 'sweetalert';
 import { getBankLogoUrl } from '@/features/shared/utils/bankImageLoader.js';
-const PREFIX = '/financial-products';
 
 export const useDepositStore = defineStore('deposit', {
   state: () => ({
@@ -17,10 +16,10 @@ export const useDepositStore = defineStore('deposit', {
       this.loading = true;
       this.error = null;
       try {
-        let { data } = await api.get(`${PREFIX}/deposits/`);
-        if (!data.length && PREFIX === '/financial-products') {
+        let { data } = await productApi.getDeposits();
+        if (!data.length) {
           await this.loadDeposits();
-          data = (await api.get(`${PREFIX}/deposits/`)).data;
+          data = (await productApi.getDeposits()).data;
         }
         this.deposits = data.map(product => ({
           ...product,
@@ -39,7 +38,7 @@ export const useDepositStore = defineStore('deposit', {
       this.currentDeposit = null;
       this.error = null;
       try {
-        const { data } = await api.get(`${PREFIX}/deposits/${code}/`);
+        const { data } = await productApi.getDepositDetail(code);
         this.currentDeposit = {
           ...data,
           logoUrl: getBankLogoUrl(data.kor_co_nm)
@@ -54,7 +53,7 @@ export const useDepositStore = defineStore('deposit', {
 
     async likeDeposit (code) {
       try {
-        const { data } = await api.post(`${PREFIX}/deposits/${code}/like/`);
+        const { data } = await productApi.likeDeposit(code);
 
         if (this.currentDeposit && this.currentDeposit.fin_prdt_cd === code) {
           this.currentDeposit.is_liked = data.is_liked;
@@ -66,7 +65,7 @@ export const useDepositStore = defineStore('deposit', {
         });
         return data;
       } catch (error) {
-        console.error("예금 관심상품 등록/해제 실패:", error.response?.data || error.message);
+        console.error("예금 관심상품 등/해제 실패:", error.response?.data || error.message);
         swal("오류", `작업에 실패했습니다: ${error.response?.data?.detail || error.message}`, "error");
         throw error;
       }
@@ -75,7 +74,7 @@ export const useDepositStore = defineStore('deposit', {
     async loadDeposits (page = 1) {
       this.loading = true;
       try {
-        const { data } = await api.post(`${PREFIX}/load/deposits/?page=${page}`);
+        const { data } = await productApi.loadDeposits(page);
         console.log("예금 상품 DB 적재 결과:", data.detail);
         return data.detail;
       } catch (e) {

@@ -56,7 +56,7 @@ import axios from 'axios';
 import { useMapStore } from '@/features/map/store/mapStore';
 import swal from 'sweetalert';
 
-const KAKAO_API_KEY = import.meta.env.VITE_KAKAO_API_KEY;
+const KAKAO_MAP_API_KEY = import.meta.env.VITE_KAKAO_MAP_API_KEY;
 const KAKAO_MOBILITY_KEY = import.meta.env.VITE_KAKAO_MOBILITY_KEY;
 
 const mapStore = useMapStore();
@@ -280,7 +280,7 @@ onMounted(() => {
   }
   const kakaoSdkScript = document.createElement('script');
   kakaoSdkScript.type = 'text/javascript';
-  kakaoSdkScript.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_API_KEY}&autoload=false&libraries=services,drawing`;
+  kakaoSdkScript.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false&libraries=services,drawing`;
   document.head.appendChild(kakaoSdkScript);
   
   kakaoSdkScript.onload = () => {

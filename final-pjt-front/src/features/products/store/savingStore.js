@@ -1,10 +1,7 @@
-// final-pjt/final_pjt-front/src/stores/savingStore.js
 import { defineStore } from 'pinia';
-import api from '@/features/shared/api/api.js';
+import { productApi } from '@/features/products/api/productApi.js';
 import swal from 'sweetalert';
 import { getBankLogoUrl } from '@/features/shared/utils/bankImageLoader.js';
-
-const PREFIX = '/financial-products';
 
 export const useSavingStore = defineStore('saving', {
   state: () => ({
@@ -19,10 +16,10 @@ export const useSavingStore = defineStore('saving', {
       this.loading = true;
       this.error = null;
       try {
-        let { data } = await api.get(`${PREFIX}/savings/`);
-        if (!data.length && PREFIX === '/financial-products') {
+        let { data } = await productApi.getSavings();
+        if (!data.length) {
           await this.loadSavings();
-          data = (await api.get(`${PREFIX}/savings/`)).data;
+          data = (await productApi.getSavings()).data;
         }
         this.savings = data.map(product => ({
           ...product,
@@ -41,7 +38,7 @@ export const useSavingStore = defineStore('saving', {
       this.currentSaving = null;
       this.error = null;
       try {
-        const { data } = await api.get(`${PREFIX}/savings/${code}/`);
+        const { data } = await productApi.getSavingDetail(code);
         this.currentSaving = {
           ...data,
           logoUrl: getBankLogoUrl(data.kor_co_nm)
@@ -54,9 +51,10 @@ export const useSavingStore = defineStore('saving', {
       }
     },
 
-    async likeSaving(code) {
+    async likeSaving (code) {
       try {
-        const { data } = await api.post(`${PREFIX}/savings/${code}/like/`);
+        const { data } = await productApi.likeSaving(code);
+
         if (this.currentSaving && this.currentSaving.fin_prdt_cd === code) {
           this.currentSaving.is_liked = data.is_liked;
         }
@@ -67,16 +65,16 @@ export const useSavingStore = defineStore('saving', {
         });
         return data;
       } catch (error) {
-        console.error("적금 관심상품 등록/해제 실패:", error.response?.data || error.message);
+        console.error("적금 관심상품 등/해제 실패:", error.response?.data || error.message);
         swal("오류", `작업에 실패했습니다: ${error.response?.data?.detail || error.message}`, "error");
         throw error;
       }
     },
 
-    async loadSavings(page = 1) {
+    async loadSavings (page = 1) {
       this.loading = true;
       try {
-        const { data } = await api.post(`${PREFIX}/load/savings/?page=${page}`);
+        const { data } = await productApi.loadSavings(page);
         console.log("적금 상품 DB 적재 결과:", data.detail);
         return data.detail;
       } catch (e) {

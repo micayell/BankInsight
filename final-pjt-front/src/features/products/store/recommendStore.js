@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import api from "@/features/shared/api/api.js";
+import { productApi } from "@/features/products/api/productApi.js";
 import { useUserStore } from "../../accounts/store/userStore.js";
 
 export const useRecommendStore = defineStore('recommend', () => {
@@ -15,8 +15,8 @@ export const useRecommendStore = defineStore('recommend', () => {
         }
         try {
             const [depositRes, savingRes] = await Promise.all([
-                api.get(`/products/recommend/deposit/${userStore.userInfo.username}/`),
-                api.get(`/products/recommend/saving/${userStore.userInfo.username}/`)
+                productApi.getRecommendFirstDeposit(userStore.userInfo.username),
+                productApi.getRecommendFirstSaving(userStore.userInfo.username)
             ]);
             recommendFirst.value = [...depositRes.data, ...savingRes.data];
         } catch (error) {
@@ -32,8 +32,8 @@ export const useRecommendStore = defineStore('recommend', () => {
         }
         try {
             const [depositRes, savingRes] = await Promise.all([
-                api.get(`/products/recommend/deposit/second/${userStore.userInfo.username}/`),
-                api.get(`/products/recommend/saving/second/${userStore.userInfo.username}/`)
+                productApi.getRecommendSecondDeposit(userStore.userInfo.username),
+                productApi.getRecommendSecondSaving(userStore.userInfo.username)
             ]);
             recommendSecond.value = [...depositRes.data, ...savingRes.data];
         } catch (error) {

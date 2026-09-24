@@ -6,15 +6,15 @@
       </div>
       <p class="mt-2 text-muted">상품 정보를 불러오는 중입니다...</p>
     </div>
-    <div v-else-if="product && product.fin_prdt_cd" class="content-card p-4 p-md-5 shadow-sm">
+    <div v-else-if="product && product.fin_prdt_cd" class="bg-white p-4 p-md-5 rounded-4 shadow-sm border-0 mb-4">
       <header class="product-header border-bottom pb-3 mb-4">
         <div class="d-flex justify-content-between align-items-start flex-wrap">
           <div class="me-3">
             <h1 class="h3 fw-bold product-bank-name mb-1">{{ product.kor_co_nm }}</h1>
             <p class="h5 product-name text-muted mb-0">{{ product.fin_prdt_nm }}</p>
           </div>
-          <button @click="subscribe" class="btn btn-sm subscribe-button mt-2 mt-md-0" 
-                  :class="isSubscribed ? 'btn-outline-danger' : 'btn-outline-primary'"> 
+          <button @click="subscribe" class="btn btn-sm btn mt-2 mt-md-0 py-2 px-3 fw-bold" 
+                  :class="isSubscribed ? 'btn-light text-danger bg-white border-0 shadow-sm' : 'btn-primary text-white'"> 
             <span class="material-symbols-outlined me-1 align-middle icon-state" :class="{'is-filled': isSubscribed}">
             {{ isSubscribed ? '관심 해제' : '관심 등록' }}
              </span>
