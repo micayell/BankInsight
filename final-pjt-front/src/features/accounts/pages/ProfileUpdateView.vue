@@ -207,6 +207,7 @@ const cancelUpdate = () => {
   width: 180px;
   height: 180px;
   object-fit: cover;
+  border-radius: 50%;
   border: 3px solid #eee;
 }
 .form-label {

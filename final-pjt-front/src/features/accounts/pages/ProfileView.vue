@@ -8,7 +8,7 @@
 
       <div class="row gy-4">
         <div class="col-lg-4">
-          <div class="card card-custom h-100 profile-info-card">
+          <div class="card bg-white border-0 shadow-sm rounded-4 h-100">
             <div class="card-body text-center p-4">
               <div class="profile-image-wrapper mx-auto mb-4">
                 <img :src="profileImageUrl" alt="프로필 이미지" class="profile-image" />
@@ -75,7 +75,7 @@
               </div>
 
               <div v-else-if="likedProductsCount > 0">
-                <ul class="nav nav-tabs custom-tabs mb-4" id="likedProductsTab" role="tablist">
+                <ul class="nav nav-tabs nav-pills mb-4 gap-2 mb-4" id="likedProductsTab" role="tablist">
                   <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="deposit-tab" data-bs-toggle="tab" data-bs-target="#deposit-tab-pane" type="button" role="tab" aria-controls="deposit-tab-pane" aria-selected="true">
                       정기예금 <span class="badge bg-secondary ms-1">{{ likedDeposits.length }}</span>
@@ -96,7 +96,7 @@
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3" v-else>
                       <div v-for="product in likedDeposits" :key="product.fin_prdt_cd" class="col">
-                         <div class="card h-100 mini-product-card shadow-sm border-0" @click="goToDepositDetail(product.fin_prdt_cd)" style="cursor: pointer;">
+                         <div class="toss-product-card h-100 border-0 shadow-sm hover-grow cursor-pointer" @click="goToDepositDetail(product.fin_prdt_cd)" style="cursor: pointer;">
                             <div class="card-body p-3">
                               <p class="text-muted small mb-1">{{ product.kor_co_nm }}</p>
                               <h6 class="font-weight-bold mb-2 text-truncate" :title="product.fin_prdt_nm">{{ product.fin_prdt_nm }}</h6>
@@ -119,7 +119,7 @@
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3" v-else>
                       <div v-for="product in likedSavings" :key="product.fin_prdt_cd" class="col">
-                         <div class="card h-100 mini-product-card shadow-sm border-0" @click="goToSavingDetail(product.fin_prdt_cd)" style="cursor: pointer;">
+                         <div class="toss-product-card h-100 border-0 shadow-sm hover-grow cursor-pointer" @click="goToSavingDetail(product.fin_prdt_cd)" style="cursor: pointer;">
                             <div class="card-body p-3">
                               <p class="text-muted small mb-1">{{ product.kor_co_nm }}</p>
                               <h6 class="font-weight-bold mb-2 text-truncate" :title="product.fin_prdt_nm">{{ product.fin_prdt_nm }}</h6>
@@ -177,19 +177,17 @@ const fetchProfileAndProducts = async () => {
     loadingProducts.value = true;
     likedProductsError.value = null;
     try {
-        const userInfo = await userStore.getUserInfo(username);
+        const userInfo = await userStore.getProfile(username);
         profile.value = userInfo;
 
-        if (userInfo.interest_deposit && userInfo.interest_deposit.length > 0) {
-           await depositStore.fetchDeposits();
-           likedDeposits.value = depositStore.deposits.filter(p => userInfo.interest_deposit.includes(p.fin_prdt_cd));
+        if (userInfo.interested_deposits && userInfo.interested_deposits.length > 0) {
+           likedDeposits.value = userInfo.interested_deposits;
         } else {
            likedDeposits.value = [];
         }
 
-        if (userInfo.interest_saving && userInfo.interest_saving.length > 0) {
-           await savingStore.fetchSavings();
-           likedSavings.value = savingStore.savings.filter(p => userInfo.interest_saving.includes(p.fin_prdt_cd));
+        if (userInfo.interested_savings && userInfo.interested_savings.length > 0) {
+           likedSavings.value = userInfo.interested_savings;
         } else {
            likedSavings.value = [];
         }
@@ -218,14 +216,12 @@ const profileImageUrl = computed(() => {
 });
 
 const getTendencyLabel = (value) => {
-    const tendencies = {
-        0: '위험 회피형',
-        1: '안정 추구형',
-        2: '위험 중립형',
-        3: '적극 수익 추구형',
-        4: '위험 선호형'
-    };
-    return tendencies[value] || '미설정';
+  if (value == null || value === 0) return '미설정';
+  if (value <= 2) return '안정형 (위험 회피)';
+  if (value <= 4) return '안정추구형';
+  if (value <= 6) return '위험중립형';
+  if (value <= 8) return '적극수익추구형';
+  return '공격투자형 (위험 선호)';
 }
 
 const formatCurrency = (value) => {
@@ -283,6 +279,72 @@ const confirmDeleteAccount = () => {
 </script>
 
 <style scoped>
-/* ... (existing styles) ... */
-.profile-view { }
+.page-wrapper { padding: 3rem 0; }
+.content-container { max-width: 1140px; margin: 0 auto; padding: 0 1rem; }
+.page-section-header { text-align: center; margin-bottom: 3rem; }
+.title { font-size: 2.2rem; font-weight: 700; color: #191f28; margin-bottom: 0.5rem; }
+.subtitle { font-size: 1.1rem; color: #4e5968; }
+
+.profile-image-wrapper {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-stats-grid {
+  display: flex;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-item {
+  flex: 1;
+}
+.stat-item:first-child { border-right: 1px solid #e5e8eb; }
+.stat-label { font-size: 0.85rem; color: #8b95a1; margin-bottom: 0.25rem; }
+.stat-value { font-size: 1.1rem; }
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f2f4f6;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label { color: #8b95a1; font-weight: 500; }
+.detail-data { color: #191f28; font-weight: 600; }
+
+.toss-product-card {
+  background-color: #f9fafb;
+  border-radius: 16px;
+  border: 1px solid #f2f4f6 !important;
+  transition: all 0.2s ease;
+}
+.hover-grow:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+  background-color: #ffffff;
+  border-color: #e5e8eb !important;
+}
+.nav-pills .nav-link {
+  border-radius: 12px;
+  padding: 0.6rem 1.2rem;
+  color: #4e5968;
+  font-weight: 500;
+  background-color: transparent;
+}
+.nav-pills .nav-link.active {
+  background-color: #3182f6;
+  color: white;
+  font-weight: 600;
+}
 </style>

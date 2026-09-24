@@ -9,4 +9,12 @@ export const authApi = {
   // 프로필 관련
   getProfile: (username) => api.get(`/accounts/profile/${username}/`),
   updateProfile: (username, data) => api.put(`/accounts/profile/${username}/`, data),
+
+  // 비밀번호 찾기
+  resetPassword: (email) => api.post('/dj-rest-auth/password/reset/', { email }),
+  resetPasswordConfirm: (data) => api.post('/dj-rest-auth/password/reset/confirm/', data),
+
+  // 이메일 인증
+  sendVerifyEmail: (email) => api.post('/accounts/email-verify/send/', { email }),
+  confirmVerifyEmail: (email, code) => api.post('/accounts/email-verify/confirm/', { email, code }),
 };

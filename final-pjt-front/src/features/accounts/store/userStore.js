@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import swal from 'sweetalert';
 import router from '@/app/index.js';
 import { getBankLogoUrl } from '@/features/shared/utils/bankImageLoader.js';
-import api from '@/features/shared/api/api.js';
+import { authApi } from '@/features/accounts/api/authApi.js';
 
 export const useUserStore = defineStore(
   'user',
@@ -21,7 +21,7 @@ export const useUserStore = defineStore(
       } else {
         userInfo.value = null;
         localStorage.removeItem('userInfo');
-        console.warn("setUserInfoState: 유효하지 않은 사용자 정보가 전달되었습니다.", data);
+        console.warn("setUserInfoState: 유효하지 않은 사용자 정보가 전달되었습니다", data);
       }
     };
     const removeTokenAndUserInfo = () => {
@@ -34,8 +34,8 @@ export const useUserStore = defineStore(
 
     const createUser = async payload => {
       try {
-        const response = await api.post('/dj-rest-auth/registration/', payload);
-        swal('성공!', '회원가입이 완료되었습니다. 로그인해주세요.', 'success');
+        const response = await authApi.signup(payload);
+        swal('회원가입 성공!', '입력하신 이메일로 인증 메일이 발송되었습니다. 이메일 인증 후 로그인해주세요.', 'success');
         router.push({ name: 'login' });
         return response.data;
       } catch (error) {
@@ -58,7 +58,7 @@ export const useUserStore = defineStore(
     const login = async ({ username, password }) => {
       let response;
       try {
-        response = await api.post('/dj-rest-auth/login/', { username, password });
+        response = await authApi.login({ username, password });
       } catch (error) {
         handleLoginError(error);
         throw error;
@@ -72,9 +72,9 @@ export const useUserStore = defineStore(
         try {
           await getProfile(response.data.user.username);
         } catch (e) {
-             // profile 에러 무시 혹은 처리
+             // profile 에러 무시 등 처리
         }
-        swal('환영합니다!', '로그인에 성공했습니다.', 'success');
+        swal('환영합니다.', '로그인에 성공했습니다.', 'success');
         router.push('/');
         return response.data;
       } else {
@@ -104,13 +104,13 @@ export const useUserStore = defineStore(
     const logout = async () => {
       try {
         if (token.value) {
-            await api.post('/dj-rest-auth/logout/');
+            await authApi.logout();
         }
       } catch (error) {
         console.error("로그아웃 API 호출 실패 (무시하고 로컬 로그아웃 진행):", error.response?.data || error.message);
       } finally {
         removeTokenAndUserInfo();
-        swal('안녕히 가세요!', '로그아웃 되었습니다.', 'success');
+        swal('안녕히가세요!', '로그아웃 되었습니다.', 'success');
         router.push({ name: 'home' });
       }
     };
@@ -130,7 +130,7 @@ export const useUserStore = defineStore(
 
       console.log(`getProfile: "${usernameToFetch}"의 프로필 정보 요청 시작`);
       try {
-        const { data, status } = await api.get(`/accounts/profile/${usernameToFetch}/`);
+        const { data, status } = await authApi.getProfile(usernameToFetch);
         console.log(`getProfile: "${usernameToFetch}" 프로필 정보 수신 성공 (상태 코드: ${status})`);
 
         const processedData = { ...data };
@@ -172,7 +172,7 @@ export const useUserStore = defineStore(
       }
 
       try {
-        const { data } = await api.put(`/accounts/profile/${usernameToUpdate}/`, payload);
+        const { data } = await authApi.updateProfile(usernameToUpdate, payload);
         await getProfile(usernameToUpdate);
         swal('성공', '프로필이 수정되었습니다.', 'success');
         return data;
