@@ -98,7 +98,7 @@ ROOT_URLCONF = "final_pjt.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [ BASE_DIR / 'templates' ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -205,3 +205,6 @@ LOGIN_URL = 'http://localhost:5173/login'
 # KFTC API
 KFTC_CLIENT_ID = env('KFTC_CLIENT_ID', default='')
 KFTC_CLIENT_SECRET = env('KFTC_CLIENT_SECRET', default='')
+PASSWORD_RESET_CONFIRM_URL = "http://localhost:5173/reset-password-confirm/{uid}/{token}/"
+
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ''

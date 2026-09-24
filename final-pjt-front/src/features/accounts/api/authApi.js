@@ -9,6 +9,7 @@ export const authApi = {
   // 프로필 관련
   getProfile: (username) => api.get(`/accounts/profile/${username}/`),
   updateProfile: (username, data) => api.put(`/accounts/profile/${username}/`, data),
+  deleteAccount: (username) => api.delete(`/accounts/user/delete/${username}/`),
 
   // 비밀번호 찾기
   resetPassword: (email) => api.post('/dj-rest-auth/password/reset/', { email }),

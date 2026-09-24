@@ -5,6 +5,8 @@ import { useUserStore } from "@/features/accounts/store/userStore.js";
 import IndexView from "@/features/home/pages/IndexView.vue";
 import LoginView from "@/features/accounts/pages/LoginView.vue";
 import RegistrationView from "@/features/accounts/pages/RegistrationView.vue";
+import ResetPasswordView from "@/features/accounts/pages/ResetPasswordView.vue";
+import ResetPasswordConfirmView from "@/features/accounts/pages/ResetPasswordConfirmView.vue";
 import MapView from "@/features/map/pages/MapView.vue";
 import ArticleListView from "@/features/articles/pages/ArticleListView.vue";
 import ArticleCreateView from "@/features/articles/pages/ArticleCreateView.vue";
@@ -27,6 +29,8 @@ const routes = [
 
   { path: "/login", name: "login", component: LoginView },
   { path: "/registration", name: "registration", component: RegistrationView },
+  { path: "/reset-password", name: "reset-password", component: ResetPasswordView },
+  { path: "/reset-password-confirm/:uid/:token", name: "reset-password-confirm", component: ResetPasswordConfirmView },
 
   /* ---------- 프로필 ---------- */
   {

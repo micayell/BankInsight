@@ -36,7 +36,7 @@
         </div>
         
         <div class="text-end mb-3">
-          <a href="#" class="text-decoration-none small text-muted hover-red" @click.prevent="openPasswordReset">비밀번호를 잊으셨나요?</a>
+          <router-link :to="{ name: 'reset-password' }" class="text-decoration-none small text-muted hover-red">비밀번호를 잊으셨나요?</router-link>
         </div>
 
         <button type="submit" class="btn btn-danger w-100 mb-2">
@@ -54,8 +54,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/features/accounts/store/userStore.js'
-import { authApi } from '@/features/accounts/api/authApi.js'
-import swal from 'sweetalert'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -73,31 +71,6 @@ const logIn = async () => {
 
 const goToRegister = () => {
   router.push({ name: 'registration' })
-}
-
-const openPasswordReset = async () => {
-  const result = await swal({
-    title: '비밀번호 찾기',
-    text: '가입하신 이메일 주소를 입력해주세요.',
-    content: {
-      element: 'input',
-      attributes: {
-        placeholder: 'example@email.com',
-        type: 'email',
-      },
-    },
-    buttons: ['취소', '이메일 전송']
-  })
-
-  // If user clicks string, result is the input string.
-  if (result) {
-    try {
-      await authApi.resetPassword(result);
-      swal('전송 완료', '비밀번호 재설정 이메일이 발송되었습니다. 메일함을 확인해주세요.', 'success');
-    } catch (error) {
-      swal('오류', '이메일 전송에 실패했거나 등록되지 않은 이메일입니다.', 'error');
-    }
-  }
 }
 </script>
 
