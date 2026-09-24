@@ -20,10 +20,10 @@ BankInsight는 사용자의 금융 프로필과 앱 내 사용자 데이터를 �
 ## 🗺️ 설계 및 구조
 
 #### 서비스 아키텍처
-![서비스 아키텍처](ReadMeIMG/아키텍처.JPG)
+![아키텍처](ReadMeIMG/아키텍처.png)
 
 #### UI/UX 디자인 목업
-![디자인 목업](ReadMeIMG/목업.JPG)
+![목업](ReadMeIMG/목업.png)
 
 ## DATABASE
 #### ERD (Entity Relationship Diagram)
