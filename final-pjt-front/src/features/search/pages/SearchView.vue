@@ -9,15 +9,15 @@
     </section>
 
     <section class="search-results-display">
-      <div v-if="isLoading" class="text-center">
+      <div v-if="isLoading" key="loading" class="text-center">
         <LoadingIcon />
       </div>
-      <div v-else>
+      <div v-else key="results">
         <div v-if="videoList.length === 0 && hasSearched" class="alert alert-info text-center" role="alert">
           "{{ lastSearchTerm }}"에 대한 검색 결과가 없습니다.
         </div>
         <div v-else-if="videoList.length === 0 && !hasSearched" class="text-center text-muted py-5">
-          <p class="fs-5">검색어를 입력하여 비디오를 찾아보세요.</p>
+          <p class="fs-5">검색어를 입력하여 비디오를 찾아보세요</p>
         </div>
         <SearchVideoList v-else :video-list="videoList" />
       </div>
@@ -79,7 +79,7 @@ const getVideos = (userInput) => {
   .catch((error) => {
     console.error("YouTube API 에러:", error.response?.data || error.message);
     videoList.value = [];
-    swal("검색 오류", "비디오를 검색하는 중 문제가 발생했습니다. API 키 또는 요청을 확인해주세요.", "error");
+    swal("검색 오류", "비디오를 검색하는 데 문제가 발생했습니다. API 키나 요청을 확인해주세요.", "error");
   })
   .finally(() => {
     isLoading.value = false;

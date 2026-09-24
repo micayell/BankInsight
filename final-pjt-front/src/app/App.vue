@@ -1,13 +1,13 @@
 <template>
   <div class="app-wrapper">
-    <header class="app-header sticky-top">
+    <header class="app-header sticky-top bg-white">
       <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid">
-          <RouterLink to="/" class="navbar-brand">
+        <div class="container-fluid px-4 px-lg-5">
+          <RouterLink to="/" class="navbar-brand py-2">
             <img :src="appLogo" alt="BankInsight Logo" class="app-logo-image" />
           </RouterLink>
           <button
-            class="navbar-toggler"
+            class="navbar-toggler border-0 shadow-none"
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#navbarNavDropdown"
@@ -18,32 +18,32 @@
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarNavDropdown">
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-2">
               <li class="nav-item">
                 <RouterLink
                   to="/financial-products"
-                  class="nav-link"
+                  class="nav-link fs-6"
                   active-class="active"
-                  >예금비교</RouterLink
+                  >금융상품</RouterLink
                 >
               </li>
               <li class="nav-item">
-                <RouterLink to="/spot" class="nav-link" active-class="active"
-                  >현물상품</RouterLink
+                <RouterLink to="/spot" class="nav-link fs-6" active-class="active"
+                  >실물상품</RouterLink
                 >
               </li>
               <li class="nav-item">
-                <RouterLink to="/search" class="nav-link" active-class="active"
+                <RouterLink to="/search" class="nav-link fs-6" active-class="active"
                   >종목검색</RouterLink
                 >
               </li>
               <li class="nav-item">
-                <RouterLink to="/map" class="nav-link" active-class="active"
-                  >은행지도</RouterLink
+                <RouterLink to="/map" class="nav-link fs-6" active-class="active"
+                  >영업점찾기</RouterLink
                 >
               </li>
               <li class="nav-item">
-                <RouterLink to="/article" class="nav-link" active-class="active"
+                <RouterLink to="/article" class="nav-link fs-6" active-class="active"
                   >게시판</RouterLink
                 >
               </li>
@@ -51,27 +51,28 @@
                 <li class="nav-item">
                   <RouterLink
                     :to="`/profile/${userStore.userInfo?.username}`"
-                    class="nav-link"
-                    >내 프로필</RouterLink
+                    class="nav-link fs-6"
+                    active-class="active"
+                    >마이프로필</RouterLink
                   >
                 </li>
                 <li class="nav-item">
-                  <RouterLink to="/" class="nav-link" @click.prevent="handleLogout"
-                    >로그아웃</RouterLink
+                  <a href="#" class="nav-link fs-6" @click.prevent="handleLogout"
+                    >로그아웃</a
                   >
                 </li>
-                </template>
-                <template v-if="!userStore.isLogin">
+              </template>
+              <template v-if="!userStore.isLogin">
                 <li class="nav-item">
                   <RouterLink
                     to="/registration"
-                    class="nav-link"
+                    class="nav-link fs-6"
                     active-class="active"
                     >회원가입</RouterLink
                   >
                 </li>
                 <li class="nav-item">
-                  <RouterLink to="/login" class="nav-link" active-class="active"
+                  <RouterLink to="/login" class="nav-link fs-6" active-class="active"
                     >로그인</RouterLink
                   >
                 </li>
@@ -86,16 +87,16 @@
       <RouterView />
     </main>
 
-    <footer class="app-footer bg-dark text-secondary py-4">
+    <footer class="app-footer text-secondary py-5">
       <div class="container-fluid text-center">
-        <p class="mb-0">
-          &copy; {{ new Date().getFullYear() }} BankInsight. 모든 권리 보유.
+        <p class="mb-0 text-muted fw-medium font-monospace">
+          &copy; {{ new Date().getFullYear() }} BankInsight. All rights reserved.
         </p>
       </div>
     </footer>
 
     <Transition name="bounce">
-      <div v-show="expand" class="chatbot-window shadow-lg">
+      <div v-show="expand" class="chatbot-window shadow-lg border-0 rounded-4">
         <ChatbotComponent />
       </div>
     </Transition>
@@ -139,55 +140,103 @@ const handleLogout = () => {
 };
 </script>
 
+<style>
+/* CSS RESET AND TOSS DESIGN SYSTEM STYLES */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css");
+
+:root {
+  --toss-blue: #3182f6;
+  --toss-blue-hover: #1b64da;
+  --toss-bg: #f9fafb;
+  --toss-card-bg: #ffffff;
+  --toss-text-dark: #191f28;
+  --toss-text-medium: #4e5968;
+  --toss-text-light: #8b95a1;
+  --toss-border: #f2f4f6;
+  --toss-border-dark: #e5e8eb;
+  --toss-radius: 16px;
+  --toss-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  --toss-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+body {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--toss-text-dark);
+  background-color: var(--toss-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Button Globally Override to Toss Style */
+.btn-primary {
+  background-color: var(--toss-blue) !important;
+  border-color: var(--toss-blue) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  padding: 0.6rem 1.2rem !important;
+}
+
+.btn-primary:hover, .btn-primary:active {
+  background-color: var(--toss-blue-hover) !important;
+  border-color: var(--toss-blue-hover) !important;
+}
+
+/* Cards Globally Override to Toss Style */
+.card {
+  background-color: var(--toss-card-bg);
+  border-radius: var(--toss-radius) !important;
+  border: 1px solid var(--toss-border) !important;
+  box-shadow: var(--toss-shadow) !important;
+}
+</style>
+
 <style scoped>
 .app-wrapper {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-image: url("/app_bg_subtle.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
 }
 
-.app-header .navbar {
-  background-color: #e8e8e8 !important; 
-  border-bottom: 1px solid #d8d8d8; 
+.app-header {
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.04);
 }
 
 .app-logo-image {
-  height: 32px;
+  height: 28px;
   width: auto;
   object-fit: contain;
 }
 
 .navbar-nav .nav-link {
   font-weight: 500;
-  font-size: 0.9rem;
-  padding: 0.5rem 0.75rem;
-  color: #333;
+  color: var(--toss-text-medium);
+  border-radius: 8px;
+  padding: 0.5rem 1rem !important;
+  transition: all 0.2s;
 }
 
-.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link:hover {
+  background-color: #f2f4f6;
+  color: var(--toss-text-dark);
+}
+
 .navbar-nav .nav-link.active {
-  color: #0056b3;
-}
-
-.main-page-content {
+  color: var(--toss-blue);
+  font-weight: 600;
 }
 
 .app-footer {
-  font-size: 0.85rem;
+  background-color: var(--toss-bg);
+  border-top: 1px solid var(--toss-border-dark);
 }
 
+/* Chatbot Styles */
 .chatbot-window {
   position: fixed;
   bottom: 130px;
   right: 30px;
   z-index: 1050;
   background-color: #ffffff;
-  border-radius: 0.5rem;
   width: 400px;
   max-width: 90vw;
   height: 600px;
@@ -195,7 +244,6 @@ const handleLogout = () => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border: 1px solid #dee2e6;
 }
 
 .chatbot-fab-button {
@@ -203,17 +251,18 @@ const handleLogout = () => {
   bottom: 40px;
   right: 30px;
   z-index: 1050;
-  width: 70px;
-  height: 70px;
+  width: 65px;
+  height: 65px;
   cursor: pointer;
   transition: transform 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: white;
 }
 .chatbot-fab-button:hover {
-  transform: scale(1.1) translateY(-2px);
+  transform: scale(1.05) translateY(-2px);
 }
 .chatbot-fab-icon {
   width: 100%;
@@ -223,122 +272,19 @@ const handleLogout = () => {
 }
 
 .bounce-enter-active {
-  animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .bounce-leave-active {
-  animation: bounce-in 0.3s cubic-bezier(0.6, -0.28, 0.735, 0.045) reverse;
+  animation: bounce-in 0.25s cubic-bezier(0.6, -0.28, 0.735, 0.045) reverse;
 }
 @keyframes bounce-in {
   0% {
-    transform: scale(0) translateY(50px);
+    transform: scale(0.8) translateY(20px);
     opacity: 0;
   }
   100% {
     transform: scale(1) translateY(0);
     opacity: 1;
   }
-}
-:root {
-  --app-primary-color: #D93600; 
-  --app-secondary-color: #007A87; 
-  
-  --app-text-dark: #212529;    
-  --app-text-medium: #495057;  
-  --app-text-light: #6c757d;   
-  
-  --app-background-primary: #FFFFFF; 
-  --app-background-secondary: #f4f6f8; 
-  
-  --app-border-color: #dee2e6;  
-  --app-border-radius: 0.25rem; 
-
-  --app-font-sans-serif: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-body {
-  font-family: var(--app-font-sans-serif);
-  color: var(--app-text-dark);
-  background-color: var(--app-background-primary);
-  line-height: 1.6;
-}
-
-
-.page-wrapper {
-  background-color: var(--app-background-secondary); 
-  min-height: calc(100vh - 56px); 
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-.content-container {
-  width: 100%;
-  max-width: 1140px; 
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 15px;
-  padding-right: 15px;
-  background-color: var(--app-background-primary); 
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.075); 
-  border-radius: var(--app-border-radius);
-}
-
-.page-section-header {
-  text-align: center;
-  padding: 2rem 0 1.5rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid var(--app-border-color);
-}
-
-.page-section-header .title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--app-text-dark);
-  margin-bottom: 0.5rem;
-}
-
-.page-section-header .subtitle {
-  font-size: 1.1rem;
-  color: var(--app-text-medium);
-}
-
-.btn-custom {
-  font-family: var(--app-font-sans-serif);
-  border-radius: var(--app-border-radius);
-  padding: 0.6rem 1.2rem;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: all 0.2s ease-in-out;
-  border: 1px solid transparent;
-}
-
-.btn-custom-primary {
-  background-color: var(--app-primary-color);
-  border-color: var(--app-primary-color);
-  color: var(--app-background-primary);
-}
-.btn-custom-primary:hover {
-  background-color: #c03000; 
-  border-color: #c03000;
-  color: var(--app-background-primary);
-}
-
-.btn-custom-secondary {
-  background-color: var(--app-secondary-color);
-  border-color: var(--app-secondary-color);
-  color: var(--app-background-primary);
-}
-.btn-custom-secondary:hover {
-  background-color: #005f69; 
-  border-color: #005f69;
-  color: var(--app-background-primary);
-}
-
-.btn-custom-outline-dark {
-  border-color: var(--app-text-dark);
-  color: var(--app-text-dark);
-}
-.btn-custom-outline-dark:hover {
-  background-color: var(--app-text-dark);
-  color: var(--app-background-primary);
 }
 </style>

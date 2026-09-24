@@ -42,7 +42,7 @@ export const useSpotStore = defineStore("spot", () => {
     const params = {};
     if (start.value) params.start = start.value;
     if (end.value)   params.end   = end.value;
-    params.metal = asset.value === "gold" ? "금" : "은";
+    params.metal = asset.value === "gold" ? "금" : "석유";
 
     try {
       const res = await api.get(`/spot/`, { params });
@@ -55,7 +55,7 @@ export const useSpotStore = defineStore("spot", () => {
     }
   }
 
-  const dates  = computed(() => rawData.value.map(i => i.date));
+  const   dates  = computed(() => rawData.value.map(i => i.date));
   const prices = computed(() => rawData.value.map(i => i.price));
 
   return {

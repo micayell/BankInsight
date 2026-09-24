@@ -1,24 +1,24 @@
 <template>
   <div class="container spot-view-container py-4">
     <header class="view-header mb-4">
-      <h1 class="h3 page-main-title">금/은 시세 변동 조회</h1>
+      <h1 class="h3 page-main-title">금/석유 시세 변동 조회</h1>
     </header>
 
-    <section class="controls-section card shadow-sm mb-4">
-      <div class="card-body">
+    <section class="controls-section bg-white border-0 shadow-sm rounded-4 p-3 mb-4">
+      <div class="p-2">
         <div class="mb-3 period-selector">
           <label class="form-label d-block mb-2 control-label">기간 선택</label>
           <div class="btn-group period-button-group" role="group">
-            <button type="button" @click="selectPeriod('1m')" class="btn" :class="selectedPeriod === '1m' ? 'btn-dark' : 'btn-outline-secondary'">
+            <button type="button" @click="selectPeriod('1m')" class="btn" :class="selectedPeriod === '1m' ? 'btn-primary text-white' : 'btn-light text-muted border-0 bg-white'">
               1개월
             </button>
-            <button type="button" @click="selectPeriod('3m')" class="btn" :class="selectedPeriod === '3m' ? 'btn-dark' : 'btn-outline-secondary'">
+            <button type="button" @click="selectPeriod('3m')" class="btn" :class="selectedPeriod === '3m' ? 'btn-primary text-white' : 'btn-light text-muted border-0 bg-white'">
               3개월
             </button>
-            <button type="button" @click="selectPeriod('1y')" class="btn" :class="selectedPeriod === '1y' ? 'btn-dark' : 'btn-outline-secondary'">
+            <button type="button" @click="selectPeriod('1y')" class="btn" :class="selectedPeriod === '1y' ? 'btn-primary text-white' : 'btn-light text-muted border-0 bg-white'">
               1년
             </button>
-            <button type="button" @click="selectPeriod('3y')" class="btn" :class="selectedPeriod === '3y' ? 'btn-dark' : 'btn-outline-secondary'">
+            <button type="button" @click="selectPeriod('3y')" class="btn" :class="selectedPeriod === '3y' ? 'btn-primary text-white' : 'btn-light text-muted border-0 bg-white'">
               3년
             </button>
           </div>
@@ -42,8 +42,8 @@
               <label class="form-check-label" for="goldRadio">금</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" id="silverRadio" value="silver" v-model="tempSpotParameters.asset" />
-              <label class="form-check-label" for="silverRadio">은</label>
+              <input class="form-check-input" type="radio" id="oilRadio" value="oil" v-model="tempSpotParameters.asset" />
+              <label class="form-check-label" for="oilRadio">석유</label>
             </div>
           </div>
           <div class="col-md-auto fetch-button-wrapper">
@@ -126,8 +126,9 @@ watch([
     return;
   }
 
-  const traceColor = currentDisplayParameters.asset === "gold" ? '#B8860B' : '#708090'; 
-  const assetName = currentDisplayParameters.asset === "gold" ? "금 시세" : "은 시세";
+  const traceColor = currentDisplayParameters.asset === "gold" ? '#B8860B' : '#000000'; 
+  const assetName = currentDisplayParameters.asset === "gold" ? "금 시세" : "석유 시세";
+  const yAxisTitle = currentDisplayParameters.asset === "gold" ? "시세 (KRW/g)" : "할인평균단가 (원)";
 
   Plotly.react(
     chartRef.value,
@@ -148,7 +149,7 @@ watch([
         linecolor: '#ddd',
       },
       yaxis: {
-        title: { text: "시세 (KRW/g)", font: { size: 13, color: '#555' } },
+        title: { text: yAxisTitle, font: { size: 13, color: '#555' } },
         tickformat: ",.0f", 
         gridcolor: '#f0f0f0',
         zerolinecolor: '#ddd',
@@ -183,113 +184,27 @@ onMounted(() => {
 
 <style scoped>
 .spot-view-container {
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #f4f6f8; 
-  padding-top: 2rem;
-  padding-bottom: 3rem;
-  min-height: calc(100vh - 56px); 
+  max-width: 1000px;
 }
-
-.view-header .page-main-title {
+.page-main-title {
+  font-weight: 700;
+  font-size: 2rem;
+  color: #191f28;
+}
+.control-label {
   font-weight: 600;
-  color: #212529;
-  text-align: center; 
-  margin-bottom: 1.8rem; 
+  color: #4e5968;
 }
-
-.controls-section.card {
-  border: 1px solid #e0e0e0; 
-  border-radius: 0.375rem; 
-  background-color: #fff;
+.btn-group .btn {
+  border-radius: 8px !important;
+  margin-right: 8px;
 }
-.card-body {
-  padding: 1.8rem; 
+.form-control {
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  padding: 0.75rem 1rem;
 }
-
-.control-label { 
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #495057;
-}
-
-.period-button-group .btn {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
-  font-weight: 500;
-}
-.btn-dark { 
-  background-color: #343a40;
-  border-color: #343a40;
-  color: #fff;
-}
-.btn-dark:hover {
-  background-color: #23272b;
-  border-color: #1d2124;
-}
-.btn-outline-secondary { 
-  color: #6c757d;
-  border-color: #ced4da;
-}
-.btn-outline-secondary:hover {
-  background-color: #e9ecef;
-  color: #495057;
-}
-
-.control-divider {
-  border-top: 1px solid #ebebeb; 
-}
-
-.filter-input-group .form-control-sm {
-  font-size: 0.9rem;
-  padding: 0.45rem 0.75rem; 
-}
-
-.asset-selector-group .form-check-label {
-  font-size: 0.9rem;
-  color: #333;
-}
-.asset-selector-group .form-check-inline {
-  margin-right: 1.2rem;
-}
-.asset-selector-group .form-check-input:checked {
-  background-color: #343a40; 
-  border-color: #343a40;
-}
-
-.fetch-button-wrapper {
-  padding-top: 1.45rem; 
-}
-.fetch-button-wrapper .btn-primary {
-  background-color: #0062cc; 
-  border-color: #005cbf;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-.fetch-button-wrapper .btn-primary:hover {
-  background-color: #004a99;
-  border-color: #004085;
-}
-
-.chart-display-section {
-  background-color: #ffffff;
-  padding: 1.5rem; 
-  border-radius: 0.375rem;
-  border: 1px solid #e0e0e0;
-  margin-top: 2rem;
-  min-height: 500px; 
-  display: flex; 
-  flex-direction: column;
-  justify-content: center; 
-}
-
-.loading-overlay {
-}
-
-.chart-render-area {
-  width: 100%;
-  height: 480px; 
-}
-
-.no-data-message {
+.toss-chart-card {
+  border-radius: 16px;
 }
 </style>

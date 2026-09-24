@@ -5,7 +5,7 @@ import api from '@/features/shared/api/api.js';
 export const useExchangeStore = defineStore('exchange', () => {
   const todayRates = ref([]);
   const yesterdayRates = ref([]);
-  const isLoading = ref(true);
+  const isLoading = ref(false);
   const error = ref(null);
 
   const fetchRates = async () => {
