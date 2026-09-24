@@ -1,3 +1,4 @@
+# noinspection SpellCheckingInspection
 import requests
 from django.conf import settings
 from django.db import transaction
@@ -20,7 +21,7 @@ def _fetch_financial_products(url, params):
         return None
 
 def _to_decimal(value):
-    """숫자형 문자열을 Decimal로 변환합니다. 변환 실패 시 None을 반환합니다."""
+    """숫자나 문자열을 Decimal로 변환합니다. 변환 실패 시 None을 반환합니다."""
     if value is None:
         return None
     try:
@@ -30,7 +31,7 @@ def _to_decimal(value):
 
 @transaction.atomic
 def save_deposit_products():
-    """정기예금 상품 목록을 API로부터 받아와 데이터베이스에 저장합니다. (페이지네이션 적용)"""
+    """정기예금 상품 목록을 API로부터 받아와 데이터베이스에 저장합니다. (페이징 적용)"""
     url = f'{BASE_URL}/depositProductsSearch.json'
     page_no = 1
     max_page_no = 1
@@ -42,7 +43,11 @@ def save_deposit_products():
         if not data or 'result' not in data:
             return False
             
-        result = data['result']
+        result = data.get('result', {})
+        if result.get('err_cd') != '000':
+            print(f"API 에러: {result.get('err_msg')}")
+            return False
+
         if page_no == 1:
             max_page_no = int(result.get('max_page_no', 1))
 
@@ -50,7 +55,7 @@ def save_deposit_products():
         option_list = result.get('optionList', [])
 
         for base in base_list:
-            product, created = DepositProduct.objects.update_or_create(
+            _, _ = DepositProduct.objects.update_or_create(
                 fin_prdt_cd=base.get('fin_prdt_cd'),
                 defaults={
                     'dcls_month': base.get('dcls_month'),
@@ -70,7 +75,7 @@ def save_deposit_products():
         for option in option_list:
             product = DepositProduct.objects.filter(fin_prdt_cd=option.get('fin_prdt_cd')).first()
             if product:
-                DepositOption.objects.update_or_create(
+                _, _ = DepositOption.objects.update_or_create(
                     deposit_product=product,
                     intr_rate_type=option.get('intr_rate_type'),
                     save_trm=option.get('save_trm'),
@@ -85,7 +90,7 @@ def save_deposit_products():
 
 @transaction.atomic
 def save_saving_products():
-    """적금 상품 목록을 API로부터 받아와 데이터베이스에 저장합니다. (페이지네이션 적용)"""
+    """적금 상품 목록을 API로부터 받아와 데이터베이스에 저장합니다. (페이징 적용)"""
     url = f'{BASE_URL}/savingProductsSearch.json'
     page_no = 1
     max_page_no = 1
@@ -97,7 +102,11 @@ def save_saving_products():
         if not data or 'result' not in data:
             return False
             
-        result = data['result']
+        result = data.get('result', {})
+        if result.get('err_cd') != '000':
+            print(f"API 에러: {result.get('err_msg')}")
+            return False
+
         if page_no == 1:
             max_page_no = int(result.get('max_page_no', 1))
 
@@ -105,7 +114,7 @@ def save_saving_products():
         option_list = result.get('optionList', [])
 
         for base in base_list:
-            product, created = SavingProduct.objects.update_or_create(
+            _, _ = SavingProduct.objects.update_or_create(
                 fin_prdt_cd=base.get('fin_prdt_cd'),
                 defaults={
                     'dcls_month': base.get('dcls_month'),
@@ -125,7 +134,7 @@ def save_saving_products():
         for option in option_list:
             product = SavingProduct.objects.filter(fin_prdt_cd=option.get('fin_prdt_cd')).first()
             if product:
-                SavingOption.objects.update_or_create(
+                _, _ = SavingOption.objects.update_or_create(
                     saving_product=product,
                     intr_rate_type=option.get('intr_rate_type'),
                     rsrv_type=option.get('rsrv_type'),
@@ -139,6 +148,7 @@ def save_saving_products():
                 )
         page_no += 1
     return True
+
 @transaction.atomic
 def save_mortgage_loan_products():
     url = f'{BASE_URL}/mortgageLoanProductsSearch.json'
@@ -146,17 +156,49 @@ def save_mortgage_loan_products():
         page_no, max_page_no = 1, 1
         from .models import MortgageLoanProduct, MortgageLoanOption
         while page_no <= max_page_no:
-                data = _fetch_financial_products(url, {'auth': API_KEY, 'topFinGrpNo': grp_code, 'pageNo': page_no})
-                if not data or 'result' not in data: return False
-                result = data['result']
-                if page_no == 1: max_page_no = int(result.get('max_page_no', 1))
-                for base in result.get('baseList', []):
-                            MortgageLoanProduct.objects.update_or_create(fin_prdt_cd=base.get('fin_prdt_cd'), defaults={'dcls_month': base.get('dcls_month'), 'fin_co_no': base.get('fin_co_no'), 'kor_co_nm': base.get('kor_co_nm'), 'fin_prdt_nm': base.get('fin_prdt_nm'), 'join_way': base.get('join_way', ''), 'loan_inci_expn': base.get('loan_inci_expn', ''), 'erly_rpay_fee': base.get('erly_rpay_fee', ''), 'dly_rate': base.get('dly_rate', ''), 'loan_lmt': base.get('loan_lmt', '') })
-                for option in result.get('optionList', []):
-                    product = MortgageLoanProduct.objects.filter(fin_prdt_cd=option.get('fin_prdt_cd')).first()
-                    if product:
-                                MortgageLoanOption.objects.update_or_create(product=product, mrtg_type_nm=option.get('mrtg_type_nm',''), rpay_type_nm=option.get('rpay_type_nm',''), lend_rate_type_nm=option.get('lend_rate_type_nm',''), defaults={'lend_rate_min': _to_decimal(option.get('lend_rate_min')), 'lend_rate_max': _to_decimal(option.get('lend_rate_max')), 'lend_rate_avg': _to_decimal(option.get('lend_rate_avg'))})
-                page_no += 1
+            data = _fetch_financial_products(url, {'auth': API_KEY, 'topFinGrpNo': grp_code, 'pageNo': page_no})
+            if not data or 'result' not in data: 
+                return False
+                
+            result = data.get('result', {})
+            if result.get('err_cd') != '000':
+                print(f"API 에러: {result.get('err_msg')}")
+                return False
+                
+            if page_no == 1: 
+                max_page_no = int(result.get('max_page_no', 1))
+
+            for base in result.get('baseList', []):
+                _, _ = MortgageLoanProduct.objects.update_or_create(
+                    fin_prdt_cd=base.get('fin_prdt_cd'), 
+                    defaults={
+                        'dcls_month': base.get('dcls_month'), 
+                        'fin_co_no': base.get('fin_co_no'), 
+                        'kor_co_nm': base.get('kor_co_nm'), 
+                        'fin_prdt_nm': base.get('fin_prdt_nm'), 
+                        'join_way': base.get('join_way', ''), 
+                        'loan_inci_expn': base.get('loan_inci_expn', ''), 
+                        'erly_rpay_fee': base.get('erly_rpay_fee', ''), 
+                        'dly_rate': base.get('dly_rate', ''), 
+                        'loan_lmt': base.get('loan_lmt', '') 
+                    }
+                )
+
+            for option in result.get('optionList', []):
+                product = MortgageLoanProduct.objects.filter(fin_prdt_cd=option.get('fin_prdt_cd')).first()
+                if product:
+                    _, _ = MortgageLoanOption.objects.update_or_create(
+                        product=product,
+                        mrtg_type_nm=option.get('mrtg_type_nm',''), 
+                        rpay_type_nm=option.get('rpay_type_nm',''), 
+                        lend_rate_type_nm=option.get('lend_rate_type_nm',''), 
+                        defaults={
+                            'lend_rate_min': _to_decimal(option.get('lend_rate_min')), 
+                            'lend_rate_max': _to_decimal(option.get('lend_rate_max')), 
+                            'lend_rate_avg': _to_decimal(option.get('lend_rate_avg'))
+                        }
+                    )
+            page_no += 1
     return True
 
 @transaction.atomic
@@ -166,17 +208,46 @@ def save_jeonse_loan_products():
         page_no, max_page_no = 1, 1
         from .models import JeonseLoanProduct, JeonseLoanOption
         while page_no <= max_page_no:
-                data = _fetch_financial_products(url, {'auth': API_KEY, 'topFinGrpNo': grp_code, 'pageNo': page_no})
-                if not data or 'result' not in data: return False
-                result = data['result']
-                if page_no == 1: max_page_no = int(result.get('max_page_no', 1))
-                for base in result.get('baseList', []):
-                            JeonseLoanProduct.objects.update_or_create(fin_prdt_cd=base.get('fin_prdt_cd'), defaults={'dcls_month': base.get('dcls_month'), 'fin_co_no': base.get('fin_co_no'), 'kor_co_nm': base.get('kor_co_nm'), 'fin_prdt_nm': base.get('fin_prdt_nm'), 'join_way': base.get('join_way', ''), 'loan_inci_expn': base.get('loan_inci_expn', ''), 'erly_rpay_fee': base.get('erly_rpay_fee', ''), 'dly_rate': base.get('dly_rate', ''), 'loan_lmt': base.get('loan_lmt', '') })
-                for option in result.get('optionList', []):
-                    product = JeonseLoanProduct.objects.filter(fin_prdt_cd=option.get('fin_prdt_cd')).first()
-                    if product:
-                                JeonseLoanOption.objects.update_or_create(product=product, rpay_type_nm=option.get('rpay_type_nm',''), lend_rate_type_nm=option.get('lend_rate_type_nm',''), defaults={'lend_rate_min': _to_decimal(option.get('lend_rate_min')), 'lend_rate_max': _to_decimal(option.get('lend_rate_max')), 'lend_rate_avg': _to_decimal(option.get('lend_rate_avg'))})
-                page_no += 1
+            data = _fetch_financial_products(url, {'auth': API_KEY, 'topFinGrpNo': grp_code, 'pageNo': page_no})
+            if not data or 'result' not in data: 
+                return False
+                
+            result = data.get('result', {})
+            if result.get('err_cd') != '000':
+                print(f"API 에러: {result.get('err_msg')}")
+                return False
+                
+            if page_no == 1: 
+                max_page_no = int(result.get('max_page_no', 1))
+
+            for base in result.get('baseList', []):
+                _, _ = JeonseLoanProduct.objects.update_or_create(
+                    fin_prdt_cd=base.get('fin_prdt_cd'), 
+                    defaults={
+                        'dcls_month': base.get('dcls_month'), 
+                        'fin_co_no': base.get('fin_co_no'), 
+                        'kor_co_nm': base.get('kor_co_nm'), 
+                        'fin_prdt_nm': base.get('fin_prdt_nm'), 
+                        'join_way': base.get('join_way', ''), 
+                        'loan_inci_expn': base.get('loan_inci_expn', ''), 
+                        'erly_rpay_fee': base.get('erly_rpay_fee', ''), 
+                        'dly_rate': base.get('dly_rate', ''), 
+                        'loan_lmt': base.get('loan_lmt', '') 
+                    }
+                )
+
+            for option in result.get('optionList', []):
+                product = JeonseLoanProduct.objects.filter(fin_prdt_cd=option.get('fin_prdt_cd')).first()
+                if product:
+                    _, _ = JeonseLoanOption.objects.update_or_create(
+                        product=product,
+                        rpay_type_nm=option.get('rpay_type_nm',''), 
+                        lend_rate_type_nm=option.get('lend_rate_type_nm',''), 
+                        defaults={
+                            'lend_rate_min': _to_decimal(option.get('lend_rate_min')), 
+                            'lend_rate_max': _to_decimal(option.get('lend_rate_max')), 
+                            'lend_rate_avg': _to_decimal(option.get('lend_rate_avg'))
+                        }
+                    )
+            page_no += 1
     return True
-
-
