@@ -164,6 +164,19 @@ export const useUserStore = defineStore(
       }
     };
 
+        const deleteAccount = async (targetUsername) => {
+      try {
+        await authApi.deleteAccount(targetUsername);
+        removeTokenAndUserInfo();
+        swal('탈퇴 완료', '회원 탈퇴가 정상적으로 처리되었습니다.', 'success');
+        router.push({ name: 'home' });
+      } catch (error) {
+        swal('오류', '회원 탈퇴에 실패했습니다.', 'error');
+        console.error('Delete account failed', error);
+        throw error;
+      }
+    };
+
     const updateProfile = async (payload, targetUsername) => {
       const usernameToUpdate = targetUsername || (userInfo.value ? userInfo.value.username : null);
       if (!usernameToUpdate) {
@@ -193,7 +206,7 @@ export const useUserStore = defineStore(
     return {
       token, isLogin, userInfo, userProfile,
       createUser, login, loginUser, logout, logoutUser,
-      getProfile, updateProfile,
+      getProfile, updateProfile, deleteAccount,
       setToken,
       removeTokenAndUserInfo,
       setUserInfoState,
