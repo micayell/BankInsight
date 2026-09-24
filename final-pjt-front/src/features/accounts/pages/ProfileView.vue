@@ -36,11 +36,11 @@
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">연봉</span>
-                  <span class="detail-data">{{ formatCurrency(profile.salary) }} 원</span>
+                  <span class="detail-data">{{ formatCurrency(profile.salary) }} 만원</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">자산</span>
-                  <span class="detail-data">{{ formatCurrency(profile.wealth) }} 원</span>
+                  <span class="detail-data">{{ formatCurrency(profile.wealth) }} 만원</span>
                 </div>
               </div>
 
@@ -84,6 +84,16 @@
                   <li class="nav-item" role="presentation">
                     <button class="nav-link" id="saving-tab" data-bs-toggle="tab" data-bs-target="#saving-tab-pane" type="button" role="tab" aria-controls="saving-tab-pane" aria-selected="false">
                       정기적금 <span class="badge bg-secondary ms-1">{{ likedSavings.length }}</span>
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="mortgage-tab" data-bs-toggle="tab" data-bs-target="#mortgage-tab-pane" type="button" role="tab" aria-controls="mortgage-tab-pane" aria-selected="false">
+                      주택담보대출 <span class="badge bg-secondary ms-1">{{ likedMortgages.length }}</span>
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="jeonse-tab" data-bs-toggle="tab" data-bs-target="#jeonse-tab-pane" type="button" role="tab" aria-controls="jeonse-tab-pane" aria-selected="false">
+                      전세자금대출 <span class="badge bg-secondary ms-1">{{ likedJeonses.length }}</span>
                     </button>
                   </li>
                 </ul>
@@ -134,11 +144,58 @@
                       </div>
                     </div>
                   </div>
+                  
+                  <!-- 주담대 탭 -->
+                  <div class="tab-pane fade" id="mortgage-tab-pane" role="tabpanel" aria-labelledby="mortgage-tab" tabindex="0">
+                    <div v-if="likedMortgages.length === 0" class="text-center text-muted py-4">
+                      관심 있는 주택담보대출 상품이 없습니다.
+                    </div>
+                    <div class="row row-cols-1 row-cols-md-2 g-3" v-else>
+                      <div v-for="product in likedMortgages" :key="product.fin_prdt_cd" class="col">
+                         <div class="toss-product-card h-100 border-0 shadow-sm hover-grow cursor-pointer" @click="goToMortgageDetail(product.fin_prdt_cd)" style="cursor: pointer;">
+                            <div class="card-body p-3">
+                              <p class="text-muted small mb-1">{{ product.kor_co_nm }}</p>
+                              <h6 class="font-weight-bold mb-2 text-truncate" :title="product.fin_prdt_nm">{{ product.fin_prdt_nm }}</h6>
+                              <div class="d-flex justify-content-between align-items-end mt-3">
+                                <span class="badge bg-light text-dark border">주택담보대출</span>
+                                <button class="btn btn-sm btn-outline-danger p-1 lh-1" @click.stop="toggleLikeMortgage(product.fin_prdt_cd)" title="관심 해제">
+                                  <i class="bi bi-heart-fill"></i>
+                                </button>
+                              </div>
+                            </div>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 전세대 탭 -->
+                  <div class="tab-pane fade" id="jeonse-tab-pane" role="tabpanel" aria-labelledby="jeonse-tab" tabindex="0">
+                    <div v-if="likedJeonses.length === 0" class="text-center text-muted py-4">
+                      관심 있는 전세자금대출 상품이 없습니다.
+                    </div>
+                    <div class="row row-cols-1 row-cols-md-2 g-3" v-else>
+                      <div v-for="product in likedJeonses" :key="product.fin_prdt_cd" class="col">
+                         <div class="toss-product-card h-100 border-0 shadow-sm hover-grow cursor-pointer" @click="goToJeonseDetail(product.fin_prdt_cd)" style="cursor: pointer;">
+                            <div class="card-body p-3">
+                              <p class="text-muted small mb-1">{{ product.kor_co_nm }}</p>
+                              <h6 class="font-weight-bold mb-2 text-truncate" :title="product.fin_prdt_nm">{{ product.fin_prdt_nm }}</h6>
+                              <div class="d-flex justify-content-between align-items-end mt-3">
+                                <span class="badge bg-light text-dark border">전세자금대출</span>
+                                <button class="btn btn-sm btn-outline-danger p-1 lh-1" @click.stop="toggleLikeJeonse(product.fin_prdt_cd)" title="관심 해제">
+                                  <i class="bi bi-heart-fill"></i>
+                                </button>
+                              </div>
+                            </div>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
               <div v-else class="text-center py-5 empty-liked-state">
                 <i class="bi bi-folder2-open display-4 text-light mb-3"></i>
-                <p class="lead mb-2">아직 관심 목록에 담은 통장이 없습니다.</p>
+                <p class="lead mb-2">아직 관심 목록에 담은 상품이 없습니다.</p>
                 <p class="text-muted mb-4 small">다양한 금융 상품을 둘러보고 나에게 맞는 상품을 찾아보세요.</p>
                 <button @click="goToFinancialProducts" class="btn btn-primary px-4 rounded-pill">금융 상품 탐색하기</button>
               </div>
@@ -157,6 +214,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/features/accounts/store/userStore.js';
 import { useDepositStore } from '@/features/products/store/depositStore.js';
 import { useSavingStore } from '@/features/products/store/savingStore.js';
+import { useMortgageStore } from '@/features/products/store/mortgageStore.js';
+import { useJeonseStore } from '@/features/products/store/jeonseStore.js';
 import swal from 'sweetalert';
 
 const route = useRoute();
@@ -164,6 +223,8 @@ const router = useRouter();
 const userStore = useUserStore();
 const depositStore = useDepositStore();
 const savingStore = useSavingStore();
+const mortgageStore = useMortgageStore();
+const jeonseStore = useJeonseStore();
 
 const username = route.params.username;
 const profile = ref({});
@@ -172,6 +233,8 @@ const likedProductsError = ref(null);
 
 const likedDeposits = ref([]);
 const likedSavings = ref([]);
+const likedMortgages = ref([]);
+const likedJeonses = ref([]);
 
 const fetchProfileAndProducts = async () => {
     loadingProducts.value = true;
@@ -180,20 +243,13 @@ const fetchProfileAndProducts = async () => {
         const userInfo = await userStore.getProfile(username);
         profile.value = userInfo;
 
-        if (userInfo.interested_deposits && userInfo.interested_deposits.length > 0) {
-           likedDeposits.value = userInfo.interested_deposits;
-        } else {
-           likedDeposits.value = [];
-        }
-
-        if (userInfo.interested_savings && userInfo.interested_savings.length > 0) {
-           likedSavings.value = userInfo.interested_savings;
-        } else {
-           likedSavings.value = [];
-        }
+        likedDeposits.value = userInfo.interested_deposits || [];
+        likedSavings.value = userInfo.interested_savings || [];
+        likedMortgages.value = userInfo.interested_mortgages || [];
+        likedJeonses.value = userInfo.interested_jeonses || [];
 
     } catch (error) {
-        console.error("프로필 및 상품 정보 로딩 싪패:", error);
+        console.error("프로필 및 상품 정보 로딩 실패:", error);
         likedProductsError.value = "정보를 불러오는 데 실패했습니다.";
         swal("오류", "프로필 정보를 불러올 수 없습니다.", "error");
     } finally {
@@ -229,7 +285,12 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat('ko-KR').format(value);
 };
 
-const likedProductsCount = computed(() => likedDeposits.value.length + likedSavings.value.length);
+const likedProductsCount = computed(() => 
+  likedDeposits.value.length + 
+  likedSavings.value.length + 
+  likedMortgages.value.length + 
+  likedJeonses.value.length
+);
 
 const goToUpdateProfile = () => {
     router.push({ name: 'profile-edit', params: { username: profile.value.username } });
@@ -247,6 +308,14 @@ const goToSavingDetail = (code) => {
     router.push({ name: 'saving-detail', params: { code } });
 };
 
+const goToMortgageDetail = (code) => {
+    router.push({ name: 'mortgage-detail', params: { code } });
+};
+
+const goToJeonseDetail = (code) => {
+    router.push({ name: 'jeonse-detail', params: { code } });
+};
+
 const toggleLikeDeposit = async (code) => {
     try {
         await depositStore.likeDeposit(code);
@@ -257,6 +326,20 @@ const toggleLikeDeposit = async (code) => {
 const toggleLikeSaving = async (code) => {
     try {
         await savingStore.likeSaving(code);
+        await fetchProfileAndProducts();
+    } catch(e) {
+    }
+}
+const toggleLikeMortgage = async (code) => {
+    try {
+        await mortgageStore.likeMortgage(code);
+        await fetchProfileAndProducts();
+    } catch(e) {
+    }
+}
+const toggleLikeJeonse = async (code) => {
+    try {
+        await jeonseStore.likeJeonse(code);
         await fetchProfileAndProducts();
     } catch(e) {
     }

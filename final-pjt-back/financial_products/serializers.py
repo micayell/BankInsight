@@ -37,6 +37,57 @@ class InterestSavingSerializer(serializers.ModelSerializer):
             'options'
         )
 
+class MortgageLoanOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MortgageLoanOption
+        fields = ['id', 'mrtg_type_nm', 'rpay_type_nm', 'lend_rate_type_nm', 'lend_rate_min', 'lend_rate_max', 'lend_rate_avg']
+
+class MortgageLoanProductSerializer(serializers.ModelSerializer):
+    options = MortgageLoanOptionSerializer(many=True, read_only=True)
+    class Meta:
+        model = MortgageLoanProduct
+        fields = '__all__'
+        read_only_fields = ('interest_user',)
+
+class JeonseLoanOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JeonseLoanOption
+        fields = ['id', 'rpay_type_nm', 'lend_rate_type_nm', 'lend_rate_min', 'lend_rate_max', 'lend_rate_avg']
+
+class JeonseLoanProductSerializer(serializers.ModelSerializer):
+    options = JeonseLoanOptionSerializer(many=True, read_only=True)
+    class Meta:
+        model = JeonseLoanProduct
+        fields = '__all__'
+        read_only_fields = ('interest_user',)
+
+class InterestMortgageSerializer(serializers.ModelSerializer):
+    options = MortgageLoanOptionSerializer(many=True, read_only=True)
+    class Meta:
+        model = MortgageLoanProduct
+        fields = (
+            'id', 
+            'fin_prdt_cd', 
+            'fin_prdt_nm', 
+            'kor_co_nm', 
+            'loan_inci_expn',
+            'options'
+        )
+
+class InterestJeonseSerializer(serializers.ModelSerializer):
+    options = JeonseLoanOptionSerializer(many=True, read_only=True)
+    class Meta:
+        model = JeonseLoanProduct
+        fields = (
+            'id',
+            'fin_prdt_cd', 
+            'fin_prdt_nm', 
+            'kor_co_nm', 
+            'loan_inci_expn', 
+            'options'
+        )
+
+
 class DepositListSerializer(serializers.ModelSerializer):
     options = DepositOptionSerializer(many=True, read_only=True)
 
@@ -136,39 +187,3 @@ class SavingMonthSerializer(serializers.ModelSerializer):
         else:
             representation['options'] = options_data
         return representation
-    
-# class DepositRecommendSerializer(serializers.ModelSerializer): 
-#     options = DepositOptionSerializer(many=True, read_only=True)
-#     class Meta:
-#         model = DepositProduct
-#         fields = '__all__'
-
-# class SavingRecommendSerializer(serializers.ModelSerializer): 
-#     options = SavingOptionSerializer(many=True, read_only=True)
-#     class Meta:
-#         model = SavingProduct
-#         fields = '__all__'
-class MortgageLoanOptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MortgageLoanOption
-        fields = ['id', 'mrtg_type_nm', 'rpay_type_nm', 'lend_rate_type_nm', 'lend_rate_min', 'lend_rate_max', 'lend_rate_avg']
-
-class MortgageLoanProductSerializer(serializers.ModelSerializer):
-    options = MortgageLoanOptionSerializer(many=True, read_only=True)
-    class Meta:
-        model = MortgageLoanProduct
-        fields = '__all__'
-        read_only_fields = ('interest_user',)
-
-class JeonseLoanOptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = JeonseLoanOption
-        fields = ['id', 'rpay_type_nm', 'lend_rate_type_nm', 'lend_rate_min', 'lend_rate_max', 'lend_rate_avg']
-
-class JeonseLoanProductSerializer(serializers.ModelSerializer):
-    options = JeonseLoanOptionSerializer(many=True, read_only=True)
-    class Meta:
-        model = JeonseLoanProduct
-        fields = '__all__'
-        read_only_fields = ('interest_user',)
-

@@ -11,7 +11,12 @@ from dj_rest_auth.serializers import (
 from django.contrib.auth import get_user_model
 from allauth.account.adapter import get_adapter
 from financial_products.models import DepositProduct, SavingProduct
-from financial_products.serializers import InterestDepositSerializer, InterestSavingSerializer
+from financial_products.serializers import (
+    InterestDepositSerializer, 
+    InterestSavingSerializer,
+    InterestMortgageSerializer,
+    InterestJeonseSerializer
+)
 
 class CustomRegisterSerializer(RegisterSerializer):
     nickname = serializers.CharField(max_length=20, required=True, allow_blank=False)
@@ -88,6 +93,8 @@ class CustomTokenSerializer(TokenSerializer):
 class UserPageSerializer(serializers.ModelSerializer):
     interested_deposits = InterestDepositSerializer(source='interest_deposit', many=True, read_only=True)
     interested_savings = InterestSavingSerializer(source='interest_saving', many=True, read_only=True)
+    interested_mortgages = InterestMortgageSerializer(source='interest_mortgage', many=True, read_only=True)
+    interested_jeonses = InterestJeonseSerializer(source='interest_jeonse', many=True, read_only=True)
 
     class Meta:
         model = get_user_model()
@@ -105,6 +112,8 @@ class UserPageSerializer(serializers.ModelSerializer):
             "subscribed_products",      
             "interested_deposits",       
             "interested_savings",        
+            "interested_mortgages",
+            "interested_jeonses",
         )
         read_only_fields = ("id", "username", "email")
 
