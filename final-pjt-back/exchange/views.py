@@ -5,6 +5,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from datetime import date, timedelta
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 def _fetch_exchange_data_with_fallback(base_date):
     """
@@ -15,11 +18,17 @@ def _fetch_exchange_data_with_fallback(base_date):
     EXCHANGE_API_KEY = settings.EXCHANGE_API_KEY
     for i in range(7):
         search_date = base_date - timedelta(days=i)
+        
         # 공지사항에 따라 기존 www.koreaexim.go.kr 도메인이 종료되고 oapi.koreaexim.go.kr 로 변경됨
-        url = f'https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey={EXCHANGE_API_KEY}&searchdate={search_date.strftime("%Y%m%d")}&data=AP01'
+        url = 'https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON'
+        params = {
+            'authkey': EXCHANGE_API_KEY,
+            'searchdate': search_date.strftime("%Y%m%d"),
+            'data': 'AP01'
+        }
         
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
 
@@ -38,11 +47,11 @@ def _fetch_exchange_data_with_fallback(base_date):
 
         except requests.exceptions.HTTPError as e:
             # 404 등 실제 HTTP 에러 발생 시 재시도
-            print(f'HTTPError for {search_date}: {e}. Trying previous day.')
+            logger.warning(f'HTTPError for {search_date}: {e}. Trying previous day.')
             continue
         except requests.exceptions.RequestException as e:
             # 직접 발생시킨 API 에러 또는 타임아웃 등 다른 요청 에러
-            print(f"A request exception occurred: {e}")
+            logger.error(f"A request exception occurred: {e}")
             raise # 이 에러는 뷰에서 처리하도록 다시 발생시킴
 
     # 7일간의 재시도 후에도 데이터를 찾지 못한 경우
@@ -62,9 +71,11 @@ def exchangetoday(request):
             return Response({'error': '최근 7일간 환율 데이터를 가져오지 못했습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
     except requests.exceptions.RequestException as e:
-        return Response({'error': '외부 환율 API 호출 중 오류가 발생했습니다.', 'details': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        logger.error(f"Exchange API RequestException: {str(e)}")
+        return Response({'error': '외부 환율 API 호출 중 오류가 발생했습니다.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     except Exception as e:
-        return Response({'error': '서버 내부 오류가 발생했습니다.', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"Internal Server Error in exchangetoday: {str(e)}")
+        return Response({'error': '서버 내부 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @authentication_classes([])
@@ -85,6 +96,8 @@ def exchangeyesterday(request):
             return Response({'error': '이전 영업일의 환율 데이터를 가져오지 못했습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
     except requests.exceptions.RequestException as e:
-        return Response({'error': '외부 환율 API 호출 중 오류가 발생했습니다.', 'details': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        logger.error(f"Exchange API RequestException: {str(e)}")
+        return Response({'error': '외부 환율 API 호출 중 오류가 발생했습니다.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     except Exception as e:
-        return Response({'error': '서버 내부 오류가 발생했습니다.', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"Internal Server Error in exchangeyesterday: {str(e)}")
+        return Response({'error': '서버 내부 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

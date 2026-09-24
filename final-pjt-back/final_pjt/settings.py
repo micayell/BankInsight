@@ -16,24 +16,24 @@ import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env(DEBUG=(bool, True))
+env = environ.Env(DEBUG=(bool, False))
 
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, ".env"))
-EXCHANGE_API_KEY = env("EXCHANGE_API_KEY")
-FIN_API_KEY = env("FIN_API_KEY")
-DATA_GO_API_KEY = env("DATA_GO_API_KEY")
-OPENAI_API_KEY = env("OPENAI_API_KEY")
+EXCHANGE_API_KEY = env("EXCHANGE_API_KEY", default=None)
+FIN_API_KEY = env("FIN_API_KEY", default=None)
+DATA_GO_API_KEY = env("DATA_GO_API_KEY", default=None)
+GEMINI_API_KEY = env("GEMINI_API_KEY", default=None)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env("SECRET_KEY") # .env 파일에 SECRET_KEY가 없으면 서버 에러 발생(보안상 안전)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DEBUG") # 기본값 False, 로컬 개발시 .env에서 DEBUG=True 설정 권장
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*'] # 배포시에는 실제 도메인으로 변경해야 합니다.
 
 
 # Application definition
@@ -147,7 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ko-kr"
 
 TIME_ZONE = "Asia/Seoul"
 
@@ -181,3 +181,27 @@ REST_AUTH = {
 
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# ---------- EMAIL & AUTH SETTINGS ----------
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.naver.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_USERNAME_REQUIRED = True
+# ACCOUNT_CONFIRM_EMAIL_ON_GET = True # Click link to verify immediately
+
+# URL that user is redirected to after clicking email link
+LOGIN_URL = 'http://localhost:5173/login'
+# ---------------------------------------------
+
+# KFTC API
+KFTC_CLIENT_ID = env('KFTC_CLIENT_ID', default='')
+KFTC_CLIENT_SECRET = env('KFTC_CLIENT_SECRET', default='')

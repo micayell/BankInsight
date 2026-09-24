@@ -1,3 +1,5 @@
+from django.core.cache import cache
+from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import (
@@ -13,12 +15,18 @@ from financial_products.serializers import InterestDepositSerializer, InterestSa
 
 class CustomRegisterSerializer(RegisterSerializer):
     nickname = serializers.CharField(max_length=20, required=True, allow_blank=False)
-    email = serializers.EmailField(required=False)
+    email = serializers.EmailField(required=True)
     age = serializers.IntegerField(required=True)
     salary = serializers.IntegerField(required=True)
     wealth = serializers.IntegerField(required=True)
     tendency = serializers.IntegerField(required=True)
     desirePeriod = serializers.IntegerField(required=True)
+
+    
+    def validate_email(self, value):
+        if not cache.get(f'email_verified_{value}'):
+            raise ValidationError('이메일 인증을 먼저 완료해주세요.')
+        return value
 
     def get_cleaned_data(self):
         data = super().get_cleaned_data()
@@ -50,7 +58,8 @@ class CustomRegisterSerializer(RegisterSerializer):
 
 
 class CustomLoginSerializer(LoginSerializer):
-    email = None
+    # email = None
+    pass
 
 
 class CustomUserDetailSerializer(UserDetailsSerializer):

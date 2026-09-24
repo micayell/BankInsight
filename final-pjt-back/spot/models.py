@@ -26,18 +26,15 @@ class ProductPrice(models.Model):
     def __str__(self):
         return f"{self.get_prod_code_display()} @ {self.date}"
 
-class SilverPrice(models.Model):
-    date = models.DateField(unique=True, primary_key=True) # 날짜 (PK로 사용)
-    buy_price_per_don = models.IntegerField(null=True, blank=True, help_text="내가 살때 가격 (원/3.75g)")
-    sell_price_per_don = models.IntegerField(null=True, blank=True, help_text="내가 팔때 가격 (원/3.75g)")
-    buy_price_per_gram = models.IntegerField(null=True, blank=True, help_text="내가 살때 가격 (원/g)")
-    sell_price_per_gram = models.IntegerField(null=True, blank=True, help_text="내가 팔때 가격 (원/g)")
+class OilPrice(models.Model):
+    date = models.DateField(unique=True, primary_key=True)
+    price = models.DecimalField(max_digits=12, decimal_places=2, help_text="할인평균단가(wtAvgPrcDisc)")
     last_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "은 시세"
-        verbose_name_plural = "은 시세 목록"
-        ordering = ['-date'] # 최신 날짜부터
+        verbose_name = "석유 시세"
+        verbose_name_plural = "석유 시세 목록"
+        ordering = ['-date']
 
     def __str__(self):
-        return f"{self.date} - Buy: {self.buy_price_per_don}, Sell: {self.sell_price_per_don}"
+        return f"{self.date} - {self.price}"

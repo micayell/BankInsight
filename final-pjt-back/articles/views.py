@@ -50,7 +50,7 @@ def article_comments(request, article_id):
     article = get_object_or_404(Article, id=article_id)
 
     if request.method == 'GET':
-        comments = article.comments.select_related('user').all()
+        comments = article.comment_set.select_related('user').all()
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
     

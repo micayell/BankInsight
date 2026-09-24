@@ -1,42 +1,53 @@
 from django.conf import settings
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status, generics
-from .models import ProductPrice, SilverPrice
-from .services import fetch_gold_data, fetch_silver_data
+from .models import ProductPrice, OilPrice
+from .services import fetch_gold_data, fetch_oil_data
 from .serializers import (
-    SilverPriceSerializer, 
-    GoldPriceHistorySerializer, SilverPriceHistorySerializer
+    OilPriceSerializer, 
+    GoldPriceHistorySerializer, OilPriceHistorySerializer
 )
 from datetime import date, timedelta
 import requests
 
 def _fetch_gold_data_with_fallback(api_key: str, target_date: date, max_retries: int = 7):
-    """
-    지정된 날짜의 금 시세 데이터 조회를 시도하고, 실패(데이터 없음) 시
-    하루씩 이전 날짜로 최대 `max_retries` 일까지 재시도합니다.
-    """
     for i in range(max_retries):
         current_date = target_date - timedelta(days=i)
         date_str = current_date.strftime('%Y-%m-%d')
         
         try:
-            # 이제 금 데이터만 처리
             fetch_gold_data(api_key, date_str, date_str)
             return
         except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 404: # 데이터가 없는 경우
-                print(f"Failed to fetch gold data for {current_date} (Not Found). Retrying with previous day.")
+            if e.response.status_code == 404:
                 continue
-            raise # 그 외 HTTP 에러는 즉시 실패 처리
+            raise
         except Exception as e:
-            print(f"An unexpected error occurred while fetching gold data for {current_date}: {e}")
             raise
 
     raise Exception(f"Failed to fetch gold data after {max_retries} retries.")
 
-#금조회
+def _fetch_oil_data_with_fallback(api_key: str, target_date: date, max_retries: int = 7):
+    for i in range(max_retries):
+        current_date = target_date - timedelta(days=i)
+        date_str = current_date.strftime('%Y-%m-%d')
+        
+        try:
+            fetch_oil_data(api_key, date_str, date_str)
+            return
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                continue
+            raise
+        except Exception as e:
+            raise
+
+    raise Exception(f"Failed to fetch oil data after {max_retries} retries.")
+
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def spot_price_list(request):
     service_key = settings.DATA_GO_API_KEY
     if not service_key:
@@ -57,12 +68,19 @@ def spot_price_list(request):
 
     try:
         if metal == '금':
-            _fetch_gold_data_with_fallback(service_key, end_dt)
-        else: # 은(silver)인 경우
-            fetch_silver_data(start_dt.isoformat(), end_dt.isoformat())
+            qs = ProductPrice.objects.filter(prod_code=ProductPrice.GOLD_CODE, date__gte=start_dt, date__lte=end_dt)
+            # 평일만 있으므로 전체 일수의 절반 이하로 데이터가 있다면 과거 데이터가 비어있다고 간주
+            if qs.count() < (end_dt - start_dt).days // 2:
+                fetch_gold_data(service_key, start_dt.strftime('%Y-%m-%d'), end_dt.strftime('%Y-%m-%d'))
+            else:
+                _fetch_gold_data_with_fallback(service_key, end_dt)
+        else: # 석유인 경우
+            qs = OilPrice.objects.filter(date__gte=start_dt, date__lte=end_dt)
+            if qs.count() < (end_dt - start_dt).days // 2:
+                fetch_oil_data(service_key, start_dt.strftime('%Y-%m-%d'), end_dt.strftime('%Y-%m-%d'))
+            else:
+                _fetch_oil_data_with_fallback(service_key, end_dt)
     except Exception as e:
-        # 데이터 갱신에 실패하더라도 503 에러를 반환하지 않고, 서버에 로그만 남깁니다.
-        # DB에 저장된 기존 데이터를 기반으로 정상 응답을 진행합니다.
         print(f"Could not update {metal} price data, serving from cache. Error: {e}")
 
     if metal == '금':
@@ -70,13 +88,12 @@ def spot_price_list(request):
         qs = qs.filter(date__gte=start_dt, date__lte=end_dt).order_by('date')
         serializer = GoldPriceHistorySerializer(qs, many=True)
     else:
-        qs = SilverPrice.objects.all()
+        qs = OilPrice.objects.all()
         qs = qs.filter(date__gte=start_dt, date__lte=end_dt).order_by('date')
-        serializer = SilverPriceHistorySerializer(qs, many=True)
+        serializer = OilPriceHistorySerializer(qs, many=True)
 
     return Response(serializer.data)
 
-#은조회
-class SilverPriceListAPIView(generics.ListAPIView):
-    queryset = SilverPrice.objects.all().order_by('date')
-    serializer_class = SilverPriceSerializer
+class OilPriceListAPIView(generics.ListAPIView):
+    queryset = OilPrice.objects.all().order_by('date')
+    serializer_class = OilPriceSerializer

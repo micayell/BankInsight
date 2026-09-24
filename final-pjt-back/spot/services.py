@@ -1,11 +1,10 @@
 import requests
 from django.conf import settings
 from decimal import Decimal, InvalidOperation
-from .models import ProductPrice, SilverPrice
-from .scraper import scrape_silver
+from .models import ProductPrice, OilPrice
 
-# 1) 금 시세 API URL
-GOLD_API_URL = 'https://apis.data.go.kr/1160100/service/GetGeneralProductInfoService/getGoldPriceInfo'
+GOLD_API_URL = 'https://apis.data.go.kr/1160100/GetGeneralProductInfoService_V2/getGoldPriceInfo_V2'
+OIL_API_URL = 'https://apis.data.go.kr/1160100/GetGeneralProductInfoService_V2/getOilPriceInfo_V2'
 
 def fetch_gold_data(api_key: str, start: str, end: str):
     params = {
@@ -14,15 +13,26 @@ def fetch_gold_data(api_key: str, start: str, end: str):
         'pageNo': 1,
         'numOfRows': 1000,
     }
-    if start:
-        # API는 YYYYMMDD 포맷 요구
-        params['beginBasDt'] = start.replace('-', '')
-    if end:
-        params['endBasDt'] = end.replace('-', '')
+    
+    if start and end and start == end:
+        params['basDt'] = start.replace('-', '')
+    else:
+        if start:
+            params['beginBasDt'] = start.replace('-', '')
+        if end:
+            params['endBasDt'] = end.replace('-', '')
 
     resp = requests.get(GOLD_API_URL, params=params, timeout=10)
     resp.raise_for_status()
-    items = resp.json()['response']['body']['items']['item']
+    
+    data_body = resp.json().get('response', {}).get('body', {})
+    items_container = data_body.get('items') or {}
+    items = items_container.get('item', []) if isinstance(items_container, dict) else []
+    
+    if not items:
+        resp.status_code = 404
+        raise requests.exceptions.HTTPError('No data found', response=resp)
+
     if isinstance(items, dict):
         items = [items]
 
@@ -44,22 +54,47 @@ def fetch_gold_data(api_key: str, start: str, end: str):
                 }
             )
         except InvalidOperation:
-            # Handle cases where conversion to Decimal fails for a record
             print(f"Could not convert data to Decimal for date {date}, skipping record. Data: {item}")
             continue
 
-def fetch_silver_data(start: str, end: str):
-    """
-    scrape_silver(start, end)로부터 반환된 리스트를
-    SilverPrice 테이블에 update_or_create 합니다.
-    """
-    from .scraper import scrape_silver
+def fetch_oil_data(api_key: str, start: str, end: str):
+    params = {
+        'serviceKey': api_key,
+        'resultType': 'json',
+        'pageNo': 1,
+        'numOfRows': 1000,
+    }
+    if start and end and start == end:
+        params['basDt'] = start.replace('-', '')
+    else:
+        if start:
+            params['beginBasDt'] = start.replace('-', '')
+        if end:
+            params['endBasDt'] = end.replace('-', '')
 
-    data = scrape_silver(start, end) 
-    if not data:
-        return
-    for rec in data:
-        SilverPrice.objects.update_or_create(
-            date=rec['date'],
-            defaults={'sell_price_per_gram': rec['price']}
-        )
+    resp = requests.get(OIL_API_URL, params=params, timeout=10)
+    resp.raise_for_status()
+    
+    data_body = resp.json().get('response', {}).get('body', {})
+    items_container = data_body.get('items') or {}
+    items = items_container.get('item', []) if isinstance(items_container, dict) else []
+    
+    if not items:
+        resp.status_code = 404
+        raise requests.exceptions.HTTPError('No data found', response=resp)
+        
+    if isinstance(items, dict):
+        items = [items]
+        
+    for item in items:
+        d = item['basDt']
+        date = f"{d[:4]}-{d[4:6]}-{d[6:]}"
+        try:
+            OilPrice.objects.update_or_create(
+                date=date,
+                defaults={
+                    'price': Decimal(item.get('wtAvgPrcDisc', '0').replace(',', ''))
+                }
+            )
+        except InvalidOperation:
+            continue

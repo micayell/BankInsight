@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DepositProduct, DepositOption, SavingProduct, SavingOption
+from .models import DepositProduct, DepositOption, SavingProduct, SavingOption, MortgageLoanProduct, MortgageLoanOption, JeonseLoanProduct, JeonseLoanOption
 
 class DepositOptionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -148,3 +148,27 @@ class SavingMonthSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = SavingProduct
 #         fields = '__all__'
+class MortgageLoanOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MortgageLoanOption
+        fields = ['id', 'mrtg_type_nm', 'rpay_type_nm', 'lend_rate_type_nm', 'lend_rate_min', 'lend_rate_max', 'lend_rate_avg']
+
+class MortgageLoanProductSerializer(serializers.ModelSerializer):
+    options = MortgageLoanOptionSerializer(many=True, read_only=True)
+    class Meta:
+        model = MortgageLoanProduct
+        fields = '__all__'
+        read_only_fields = ('interest_user',)
+
+class JeonseLoanOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JeonseLoanOption
+        fields = ['id', 'rpay_type_nm', 'lend_rate_type_nm', 'lend_rate_min', 'lend_rate_max', 'lend_rate_avg']
+
+class JeonseLoanProductSerializer(serializers.ModelSerializer):
+    options = JeonseLoanOptionSerializer(many=True, read_only=True)
+    class Meta:
+        model = JeonseLoanProduct
+        fields = '__all__'
+        read_only_fields = ('interest_user',)
+
