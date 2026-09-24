@@ -23,7 +23,7 @@
                 </div>
                 <div class="stat-item">
                   <div class="stat-label">목표 기간</div>
-                  <div class="stat-value font-weight-bold">{{ profile.desirePeriod }}년</div>
+                  <div class="stat-value font-weight-bold">{{ profile.desirePeriod }}개월</div>
                 </div>
               </div>
               
