@@ -26,6 +26,10 @@
         <h2 class="section-title h5 mb-3">상품 기본 정보</h2>
         <div class="row g-3 item-list">
           <div class="col-md-6 info-item">
+            <span class="info-label">대출 기간:</span>
+            <span class="info-value text-secondary">영업점 상담 후 결정 (상환 방식에 따라 상이)</span>
+          </div>
+          <div class="col-md-6 info-item">
             <span class="info-label">가입 방법:</span>
             <span class="info-value">{{ product.join_way || '-' }}</span>
           </div>
@@ -53,7 +57,7 @@
         <div v-if="product.options && product.options.length > 0" class="list-group">
           <div v-for="opt in product.options" :key="opt.id" class="list-group-item option-item">
             <div class="fw-semibold option-header">{{ opt.rpay_type_nm }}</div>
-            <div class="option-rates">
+            <div class="option-rates mt-2">
               <span class="rate-label">대출금리유형: </span><strong class="rate-value">{{ opt.lend_rate_type_nm }}</strong><br>
               <span class="rate-label">최저 금리: </span><strong class="rate-value">{{ formatRate(opt.lend_rate_min) }}%</strong>
               <span class="rate-label ms-3">최고 금리: </span><strong class="rate-value">{{ formatRate(opt.lend_rate_max) }}%</strong>
@@ -133,7 +137,7 @@ export default {
 
       if (!token) {
         swal("로그인 필요", "로그인이 필요한 기능입니다.", "warning", {
-          buttons: { cancel: "닫기", login: { text: "로그인 하기", value: "login"}},
+          buttons: { cancel: "닫기", login: { text: "로그인하기", value: "login"}},
         }).then(value => { if (value === "login") this.$router.push({name: 'login'}); });
         return;
       }
