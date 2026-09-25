@@ -29,7 +29,7 @@
               </li>
               <li class="nav-item">
                 <RouterLink to="/spot" class="nav-link fs-6" active-class="active"
-                  >실물상품</RouterLink
+                  >환율상품</RouterLink
                 >
               </li>
               <li class="nav-item">
@@ -96,19 +96,19 @@
     </footer>
 
     <Transition name="bounce">
-      <div v-show="expand" class="chatbot-window shadow-lg border-0 rounded-4">
+      <div v-show="expand" ref="chatbotWindowRef" class="chatbot-window shadow-lg border-0 rounded-4">
         <ChatbotComponent />
       </div>
     </Transition>
 
-    <div @click="toggleChatbot" class="chatbot-fab-button rounded-circle">
+    <div @click="toggleChatbot" ref="chatbotFabRef" class="chatbot-fab-button rounded-circle">
       <img :src="chatbotIcon" alt="Chatbot Icon" class="chatbot-fab-icon" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { RouterView, RouterLink, useRouter } from "vue-router";
 import { useUserStore } from "@/features/accounts/store/userStore.js";
 import ChatbotComponent from "@/features/chatbot/components/Chatbot.vue";
@@ -121,9 +121,33 @@ const userStore = useUserStore();
 const router = useRouter();
 const expand = ref(false);
 
+const chatbotWindowRef = ref(null);
+const chatbotFabRef = ref(null);
+
 const toggleChatbot = () => {
   expand.value = !expand.value;
 };
+
+// 챗봇 바깥 클릭 시 닫기
+const closeChatbotOnOutsideClick = (event) => {
+  if (
+    expand.value &&
+    chatbotWindowRef.value &&
+    !chatbotWindowRef.value.contains(event.target) &&
+    chatbotFabRef.value &&
+    !chatbotFabRef.value.contains(event.target)
+  ) {
+    expand.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', closeChatbotOnOutsideClick);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeChatbotOnOutsideClick);
+});
 
 const handleLogout = () => {
   swal({

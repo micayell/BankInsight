@@ -6,6 +6,7 @@ import { useUserStore } from '../../accounts/store/userStore.js'
 export const useChatStore = defineStore('chat', () => {
   const chatMessages = ref([]) 
   const newMessage = ref('') 
+  const isLoading = ref(false) // AI 응답 대기 상태
   const CHATBOT_ENDPOINT = '/api/v1/chatbot/' 
 
   const getAIResponse = async (messageText) => { 
@@ -20,7 +21,7 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     if (!messageText || messageText.trim() === '') { 
-      console.warn('빈 메시지는 전송하지 않습니다.');
+      console.warn('빈 메시지가 전송될 수 없습니다.');
       return;
     }
 
@@ -41,7 +42,9 @@ export const useChatStore = defineStore('chat', () => {
       messages: previousMessagesForPayload,
     };
     
-    console.log('백엔드로 전송할 페이로드:', JSON.stringify(payload, null, 2));
+    console.log('백엔드로 전송되는 페이로드:', JSON.stringify(payload, null, 2));
+
+    isLoading.value = true; // 응답 대기 시작
 
     try {
       const response = await api.post(CHATBOT_ENDPOINT, payload, {
@@ -57,8 +60,9 @@ export const useChatStore = defineStore('chat', () => {
         chatMessages.value.push({ 
           sender: 'bot',
           text: response.data.response,
+          recommendedProducts: response.data.recommended_products || []
         });
-        console.log('챗봇 응답이 채팅에 추가됨:', response.data.response);
+        console.log('챗봇 응답을 채팅에 추가함:', response.data.response);
       } else if (response.data && typeof response.data.error === 'string') {
         console.error('백엔드에서 에러 응답:', response.data.error, response.data.details || '');
         chatMessages.value.push({ 
@@ -66,7 +70,7 @@ export const useChatStore = defineStore('chat', () => {
           text: `챗봇 오류: ${response.data.error} ${response.data.details ? '('+response.data.details+')' : ''}`,
         });
       } else {
-        console.warn('백엔드로부터 유효하지 않은 챗봇 응답 내용(response.data.response)을 받지 못했습니다. 받은 데이터:', response.data);
+        console.warn('백엔드로부터 유효한 텍스트 챗봇 응답 내용(response.data.response)을 받지 못했습니다. 받은 데이터:', response.data);
         chatMessages.value.push({ 
           sender: 'bot',
           text: '챗봇으로부터 응답을 받았으나 내용이 비어있습니다. 다시 시도해주세요.',
@@ -75,7 +79,7 @@ export const useChatStore = defineStore('chat', () => {
       
     } catch (error) {
       console.error('메시지 전송 중 Axios 오류 발생:', error.response || error.message || error);
-      let errorMessageToDisplay = '죄송합니다, 챗봇 서버와 통신 중 오류가 발생했습니다.';
+      let errorMessageToDisplay = '죄송합니다. 챗봇 서버 통신 중 오류가 발생했습니다.';
       if (error.response && error.response.data && typeof error.response.data.error === 'string') {
         errorMessageToDisplay = `서버 오류: ${error.response.data.error}`;
         if (error.response.data.details) {
@@ -88,12 +92,15 @@ export const useChatStore = defineStore('chat', () => {
         sender: 'bot',
         text: errorMessageToDisplay,
       });
+    } finally {
+      isLoading.value = false; // 응답 대기 종료
     }
   };
 
   return {
     chatMessages, 
     newMessage, 
+    isLoading, // 상태 노출
     getAIResponse, 
   }
 }, { persist: true })

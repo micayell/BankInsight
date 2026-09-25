@@ -6,7 +6,7 @@
         <i class="bi bi-robot fs-5"></i>
       </div>
       <div>
-        <h5 class="mb-0 fw-bold">무엇이든 물어보세요!</h5>
+        <h5 class="mb-0 fw-bold">무엇이든 물어보세요</h5>
         <small class="text-muted">24시간 AI 금융비서</small>
       </div>
     </div>
@@ -16,7 +16,7 @@
       <!-- Bot Welcome Message -->
       <div v-if="chatStore.chatMessages.length === 0" class="message-row bot-row mb-3 justify-content-start">
         <div class="message-bubble bot-bubble px-3 py-2 bg-light text-dark">
-          <p class="message-text mb-0 text-break" style="white-space: pre-wrap;">반갑습니다! 금융상품 추천, 가입 방법, 금리 비교 등 은행 업무와 관련해 어떤 것이든 편하게 물어보세요. 😊</p>
+          <p class="message-text mb-0 text-break" style="white-space: pre-wrap;">반갑습니다! 금융상품 추천, 가입 방법, 금리 비교 등 투자나 업무에 관해서 어떤 것이든 편하게 물어보세요 ✨</p>
         </div>
       </div>
       
@@ -27,6 +27,31 @@
       >
         <div class="message-bubble px-3 py-2 shadow-sm" :class="message.sender === 'user' ? 'user-bubble text-white bg-primary' : 'bot-bubble bg-light text-dark'">
           <p class="message-text mb-0 text-break" style="white-space: pre-wrap;">{{ message.text }}</p>
+
+          <!-- 추천 상품 바로가기 버튼 영역 -->
+          <div v-if="message.recommendedProducts && message.recommendedProducts.length > 0" class="mt-3 pt-3 border-top border-secondary-subtle">
+            <p class="mb-2 fw-semibold text-primary" style="font-size: 0.85rem;"><i class="bi bi-link-45deg"></i> 추천 상품 상세 보기:</p>
+            <div class="d-flex flex-column gap-2">
+              <button 
+                v-for="product in message.recommendedProducts" 
+                :key="product.code"
+                class="btn btn-sm btn-outline-primary text-start fw-medium rounded-3"
+                @click="goToProduct(product.type, product.code)">
+                {{ product.name }} ➡
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading / Typing Indicator -->
+      <div v-if="chatStore.isLoading" class="message-row bot-row mb-3 justify-content-start">
+        <div class="message-bubble bot-bubble px-3 py-2 bg-light text-dark d-flex align-items-center" style="min-height: 48px; min-width: 64px;">
+          <div class="typing-indicator mx-2">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -40,12 +65,12 @@
           v-model="userInput"
           placeholder="챗봇에게 물어보세요..."
           @keyup.enter="handleSendMessage"
-          :disabled="false"
+          :disabled="chatStore.isLoading"
         />
         <button 
           class="btn btn-primary rounded-pill px-4 m-1 fw-bold border-0 shadow-none" 
           @click="handleSendMessage" 
-          :disabled="!userInput.trim()"
+          :disabled="!userInput.trim() || chatStore.isLoading"
         >
           <i class="bi bi-send-fill fs-6"></i>
         </button>
@@ -56,16 +81,26 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { useChatStore } from '@/features/chatbot/store/chatStore.js'; 
 
 const chatStore = useChatStore();
+const router = useRouter();
 const userInput = ref('');
 const chatWindowRef = ref(null); 
 
 const handleSendMessage = () => {
-  if (userInput.value.trim()) {
+  if (userInput.value.trim() && !chatStore.isLoading) {
     chatStore.getAIResponse(userInput.value); 
     userInput.value = ''; 
+  }
+};
+
+const goToProduct = (type, code) => {
+  if (type === 'deposit') {
+    router.push({ name: 'deposit-detail', params: { code } });
+  } else if (type === 'saving') {
+    router.push({ name: 'saving-detail', params: { code } });
   }
 };
 
@@ -75,7 +110,15 @@ const scrollToBottomDOM = () => {
   }
 };
 
+// Array length change (new message)
 watch(() => chatStore.chatMessages.length, () => {
+  nextTick(() => {
+    scrollToBottomDOM();
+  });
+});
+
+// Loading state change (bouncing dots hide/show)
+watch(() => chatStore.isLoading, () => {
   nextTick(() => {
     scrollToBottomDOM();
   });
@@ -137,5 +180,26 @@ watch(() => chatStore.chatMessages.length, () => {
 .chat-window::-webkit-scrollbar-thumb {
   background-color: #e5e8eb;
   border-radius: 3px;
+}
+
+/* Typing Indicator Animation */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  background-color: #8b95a1;
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
 }
 </style>
