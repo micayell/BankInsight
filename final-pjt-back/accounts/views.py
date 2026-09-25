@@ -127,3 +127,31 @@ def verify_email_code(request):
         return Response({'message': '인증 성공'}, status=status.HTTP_200_OK)
     else:
         return Response({'error': '인증번호가 일치하지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_favorite_bank(request):
+    user = request.user
+    branch_info = {
+        'id': request.data.get('branch_id'),
+        'name': request.data.get('branch_name'),
+        'address': request.data.get('branch_address')
+    }
+    
+    if not branch_info['id']:
+        return Response({'error': '지점 정보가 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    favorites = user.favorite_banks if isinstance(user.favorite_banks, list) else []
+    
+    existing = next((item for item in favorites if item.get('id') == branch_info['id']), None)
+    
+    if existing:
+        favorites = [item for item in favorites if item.get('id') != branch_info['id']]
+        message = '관심 지점이 삭제되었습니다.'
+    else:
+        favorites.append(branch_info)
+        message = '관심 지점이 추가되었습니다.'
+        
+    user.favorite_banks = favorites
+    user.save()
+    return Response({'message': message, 'favorite_banks': user.favorite_banks}, status=status.HTTP_200_OK)

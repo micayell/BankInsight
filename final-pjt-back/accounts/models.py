@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-# Create your models here.
 
 class User(AbstractUser):
     nickname = models.CharField(max_length=20)
@@ -21,4 +20,9 @@ class User(AbstractUser):
         blank=True,
         help_text='상품 코드(ID) 리스트로 저장 (예: ["DP0001", "SV0003"])',
     )
-
+    
+    favorite_banks = models.JSONField(
+        "관심 지점 목록",
+        default=list,
+        blank=True,
+    )

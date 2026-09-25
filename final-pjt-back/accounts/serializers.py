@@ -81,6 +81,7 @@ class CustomUserDetailSerializer(UserDetailsSerializer):
             "tendency",
             "desirePeriod",
             "subscribed_products", 
+            "favorite_banks",
         )
 
 class CustomTokenSerializer(TokenSerializer):
@@ -114,6 +115,7 @@ class UserPageSerializer(serializers.ModelSerializer):
             "interested_savings",        
             "interested_mortgages",
             "interested_jeonses",
+            "favorite_banks",
         )
         read_only_fields = ("id", "username", "email")
 
